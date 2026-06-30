@@ -1462,7 +1462,7 @@ function renderAnalytics(records) {
   _ci.levels = new Chart(document.getElementById('ch-levels'), {
     type:'doughnut',
     data:{
-      labels:['🌱 Principiante','⭐ En Formación','🏆 Experto'],
+      labels:['🌱 Curioso/a','🧭 Explorador/a','🏆 Experto'],
       datasets:[{data:[lc.p,lc.f,lc.e], backgroundColor:['rgba(255,179,71,.85)','rgba(102,204,255,.85)','rgba(0,212,138,.85)'], borderWidth:0, hoverOffset:8}]
     },
     options:{
@@ -1620,13 +1620,13 @@ function renderAdmin(records) {
   stats.innerHTML = `
     <div class="glass stat"><div class="stat-lbl">Total</div><div class="stat-val">${records.length}</div><div class="stat-sub">participantes</div></div>
     <div class="glass stat"><div class="stat-lbl">Promedio</div><div class="stat-val" style="background:linear-gradient(135deg,#E8401C,#D4A847);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">${avg}</div><div class="stat-sub">puntos del grupo</div></div>
-    <div class="glass stat"><div class="stat-lbl">🌱 Principiante</div><div class="stat-val" style="color:#ffb347">${cnt.p}</div><div class="stat-sub">${pct("p")}% del grupo</div></div>
-    <div class="glass stat"><div class="stat-lbl">⭐ En Formación</div><div class="stat-val" style="color:#66ccff">${cnt.f}</div><div class="stat-sub">${pct("f")}% del grupo</div></div>
+    <div class="glass stat"><div class="stat-lbl">🌱 Curioso/a</div><div class="stat-val" style="color:#ffb347">${cnt.p}</div><div class="stat-sub">${pct("p")}% del grupo</div></div>
+    <div class="glass stat"><div class="stat-lbl">🧭 Explorador/a</div><div class="stat-val" style="color:#66ccff">${cnt.f}</div><div class="stat-sub">${pct("f")}% del grupo</div></div>
     <div class="glass stat"><div class="stat-lbl">🏆 Experto</div><div class="stat-val" style="color:#00d48a">${cnt.e}</div><div class="stat-sub">${pct("e")}% del grupo</div></div>
   `;
 
-  const lvlMeta = {p:{cls:"pill-p",lbl:"Principiante"},f:{cls:"pill-f",lbl:"En Formación"},e:{cls:"pill-e",lbl:"Experto"}};
-  const modShort = ['CX Fund.','Journey','Peak-End','Innovación','Fideliz.','Liderazgo','CX Digital','Métricas'];
+  const lvlMeta = {p:{cls:"pill-p",lbl:"Curioso/a"},f:{cls:"pill-f",lbl:"Explorador/a"},e:{cls:"pill-e",lbl:"Experto/a"}};
+  const modShort = ['Fundac.','Aplic.','Interac.','Estrat.','Ética'];
 
   // Store records globally for modal access
   window._adminRecords = records;
@@ -2010,8 +2010,8 @@ function renderDashboard(records) {
   document.getElementById('dash-stats').innerHTML = `
     <div class="glass stat"><div class="stat-lbl">Total</div><div class="stat-val">${records.length}</div><div class="stat-sub">participantes</div></div>
     <div class="glass stat"><div class="stat-lbl">Promedio</div><div class="stat-val" style="background:linear-gradient(135deg,#E8401C,#D4A847);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">${avg}</div><div class="stat-sub">puntos del grupo</div></div>
-    <div class="glass stat"><div class="stat-lbl">🌱 Principiante</div><div class="stat-val" style="color:#ffb347">${lc.p}</div><div class="stat-sub">${pct('p')}%</div></div>
-    <div class="glass stat"><div class="stat-lbl">⭐ En Formación</div><div class="stat-val" style="color:#66ccff">${lc.f}</div><div class="stat-sub">${pct('f')}%</div></div>
+    <div class="glass stat"><div class="stat-lbl">🌱 Curioso/a</div><div class="stat-val" style="color:#ffb347">${lc.p}</div><div class="stat-sub">${pct('p')}%</div></div>
+    <div class="glass stat"><div class="stat-lbl">🧭 Explorador/a</div><div class="stat-val" style="color:#66ccff">${lc.f}</div><div class="stat-sub">${pct('f')}%</div></div>
     <div class="glass stat"><div class="stat-lbl">🏆 Experto</div><div class="stat-val" style="color:#00d48a">${lc.e}</div><div class="stat-sub">${pct('e')}%</div></div>`;
   if (!records.length) return;
 
@@ -2025,7 +2025,7 @@ function renderDashboard(records) {
 
   _dci.dist = new Chart(document.getElementById('dch-dist'),{type:'bar',data:{labels:['0–20','21–40','41–60','61–80','81–100'],datasets:[{data:bpPct,borderRadius:6,borderSkipped:false,backgroundColor:['rgba(255,140,0,.7)','rgba(255,200,60,.7)','rgba(100,190,255,.7)','rgba(0,200,120,.75)','rgba(0,212,138,.9)']}]},options:{plugins:{legend:{display:false},datalabels:{color:'#fff',font:{weight:'bold',size:12},anchor:'end',align:'top',formatter:v=>v>0?v+'%':''}},scales:{x:CHART_SCALE.x,y:{...CHART_SCALE.y,min:0,max:100,ticks:{...CHART_SCALE.y.ticks,callback:v=>v+'%'}}}}});
 
-  _dci.levels = new Chart(document.getElementById('dch-levels'),{type:'doughnut',data:{labels:['🌱 Principiante','⭐ En Formación','🏆 Experto'],datasets:[{data:[lc.p,lc.f,lc.e],backgroundColor:['rgba(255,179,71,.85)','rgba(102,204,255,.85)','rgba(0,212,138,.85)'],borderWidth:0,hoverOffset:8}]},options:{plugins:{legend:{position:'bottom',labels:{color:'rgba(255,255,255,.65)',font:{size:10},boxWidth:10,padding:10}},datalabels:{color:'#fff',font:{weight:'bold',size:12},formatter:(v,ctx)=>{const t=ctx.dataset.data.reduce((a,b)=>a+b,0);return t?Math.round(v/t*100)+'%':'';}}}}});
+  _dci.levels = new Chart(document.getElementById('dch-levels'),{type:'doughnut',data:{labels:['🌱 Curioso/a','🧭 Explorador/a','🏆 Experto'],datasets:[{data:[lc.p,lc.f,lc.e],backgroundColor:['rgba(255,179,71,.85)','rgba(102,204,255,.85)','rgba(0,212,138,.85)'],borderWidth:0,hoverOffset:8}]},options:{plugins:{legend:{position:'bottom',labels:{color:'rgba(255,255,255,.65)',font:{size:10},boxWidth:10,padding:10}},datalabels:{color:'#fff',font:{weight:'bold',size:12},formatter:(v,ctx)=>{const t=ctx.dataset.data.reduce((a,b)=>a+b,0);return t?Math.round(v/t*100)+'%':'';}}}}});
 
   // Local + Rol charts
   const lm={}, rm={};
