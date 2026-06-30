@@ -602,6 +602,10 @@
       <div class="chart-title">Detalle por dimensión</div>
       <div class="modal-mods-bars" id="modal-bars"></div>
     </div>
+    <div class="glass chart-box" style="margin-top:18px">
+      <div class="chart-title">✍️ Expectativas y objetivos</div>
+      <div id="modal-exp"></div>
+    </div>
   </div>
 </div>
 
@@ -630,7 +634,7 @@
   <div class="intro-outer" style="text-align:center">
     <div class="intro-badge">🤖 Diagnóstico Inicial del Curso</div>
     <h1 class="intro-title">¿En qué punto estás con la<br><span class="grad-text">Inteligencia Artificial</span>?</h1>
-    <p class="intro-desc">Bienvenido/a al <strong style="color:var(--t1)">Curso en Desarrollo de habilidades para soluciones efectivas con IA: De Cero a Experto</strong>. Descubre tu punto de partida con 25 preguntas en 5 dimensiones clave. Te toma 8 minutos y al final sabrás exactamente en qué nivel arrancas.</p>
+    <p class="intro-desc">Bienvenido/a al <strong style="color:var(--t1)">Curso en Desarrollo de habilidades para soluciones efectivas con IA: De Cero a Experto</strong>. Descubre tu punto de partida con 20 preguntas de nivel en 5 dimensiones clave y 5 preguntas abiertas sobre tus expectativas. Te toma unos 10 minutos y al final sabrás exactamente en qué nivel arrancas.</p>
 
     <div class="pillars">
       <div class="pillar pillar-a">🧠 Comprender</div>
@@ -1001,7 +1005,7 @@ function encodeRecord(record) {
     t: record.tienda, r: record.rol,
     s: record.score,  k: record.nivelKey,
     m: record.modulos.map(m => m.score),
-    a: record.respuestas.join(""),
+    a: (record.respuestas||[]).filter(x => x && x.length === 1).join(""),
     ts: record.timestamp, id: record.id
   };
   return btoa(unescape(encodeURIComponent(JSON.stringify(compact))));
@@ -1035,39 +1039,40 @@ const QS = [
   {m:1,mn:"Fundacional",t:"¿Sabes diferenciar lo que la IA hace bien de lo que NO debería hacer sola?",o:["No tengo claro dónde están sus límites","Intuyo algunos límites, pero me sorprende cuando se equivoca","Conozco sus fortalezas y limitaciones, y ajusto mis expectativas según la tarea"]},
   {m:1,mn:"Fundacional",t:"¿Con qué frecuencia usas alguna herramienta de IA en tu día a día?",o:["Casi nunca — es de las primeras veces que me acerco","De vez en cuando, para cosas puntuales","A diario — ya es parte de mi forma de trabajar"]},
   {m:1,mn:"Fundacional",t:"Cuando escuchas términos como “modelo”, “prompt”, “token” o “alucinación”, ¿qué tan cómodo te sientes?",o:["Son palabras nuevas para mí","Reconozco algunas, pero no las uso con seguridad","Las entiendo y las uso con naturalidad"]},
-  {m:1,mn:"Fundacional",t:"¿Qué tan claro tienes para qué tipo de tareas conviene usar IA?",o:["Aún no sé en qué me puede ayudar realmente","Tengo algunas ideas, pero pruebo a tientas","Identifico con claridad qué tareas delegar a la IA y cuáles no"]},
   // ── 2) APLICATIVO ──
   {m:2,mn:"Aplicativo",t:"¿Qué tan bien sabes redactar una instrucción (prompt) para obtener un buen resultado?",o:["Escribo lo primero que se me ocurre y espero a ver qué sale","Doy algo de contexto, pero mis resultados son irregulares","Estructuro la instrucción con contexto, rol, formato y ejemplos para lograr resultados consistentes"]},
   {m:2,mn:"Aplicativo",t:"Cuando la IA te da una respuesta que no era lo que querías, ¿qué haces?",o:["Me frustro y lo abandono o lo hago manualmente","Vuelvo a intentar cambiando algunas palabras","Ajusto la instrucción con precisión (más contexto, ejemplos, restricciones) hasta lograrlo"]},
   {m:2,mn:"Aplicativo",t:"¿Has usado IA para resolver una tarea real de tu trabajo o estudio?",o:["Todavía no lo he intentado","Sí, para tareas simples como redactar o resumir","Sí, con regularidad para tareas complejas que me ahorran tiempo real"]},
   {m:2,mn:"Aplicativo",t:"¿Qué tan cómodo te sientes pidiéndole a la IA un formato específico (tabla, lista, correo, guion)?",o:["No sabía que se le podía pedir un formato","Lo intento, pero no siempre obtengo lo que necesito","Lo hago con facilidad y obtengo justo el formato que necesito"]},
-  {m:2,mn:"Aplicativo",t:"¿Qué tan capaz te sientes de dividir una tarea grande en pasos que la IA pueda ayudarte a resolver?",o:["No sé por dónde empezar","Lo hago a veces, de forma intuitiva","Descompongo tareas complejas y guío a la IA paso a paso con claridad"]},
   // ── 3) INTERACTIVO ──
   {m:3,mn:"Interactivo",t:"¿Qué tanto aprovechas la conversación (ir y venir) con la IA, en lugar de una sola pregunta?",o:["Hago una pregunta y me quedo con la primera respuesta","A veces repregunto si no me convence","Trabajo en diálogo: refino, corrijo y construyo sobre las respuestas anteriores"]},
   {m:3,mn:"Interactivo",t:"¿Le das contexto a la IA sobre quién eres, para quién es el resultado o qué objetivo buscas?",o:["No, solo escribo la pregunta directa","A veces doy algo de contexto","Siempre encuadro el contexto, la audiencia y el objetivo antes de pedir"]},
   {m:3,mn:"Interactivo",t:"Cuando la IA se equivoca o asume algo incorrecto, ¿cómo reaccionas?",o:["Asumo que la herramienta no sirve","Lo corrijo señalando el error puntual","La reencauzo con feedback claro y la hago razonar de nuevo sobre lo correcto"]},
   {m:3,mn:"Interactivo",t:"¿Qué tan cómodo te sientes pidiéndole a la IA que explique su razonamiento o que te haga preguntas a ti?",o:["No se me había ocurrido pedirle eso","Lo he intentado alguna vez","Lo uso a propósito para mejorar la calidad y entender mejor el resultado"]},
-  {m:3,mn:"Interactivo",t:"¿Usas la IA como compañera de pensamiento (lluvia de ideas, debatir, explorar opciones)?",o:["La veo solo como un buscador de respuestas","A veces le pido ideas","La uso como socia de pensamiento para explorar, contrastar y decidir mejor"]},
   // ── 4) ESTRATÉGICO ──
   {m:4,mn:"Estratégico",t:"¿Has pensado cómo la IA podría transformar tu trabajo o tu área, no solo tareas sueltas?",o:["No lo he pensado todavía","Tengo ideas vagas de que “podría ayudar”","Tengo una visión clara de cómo rediseñar procesos con IA"]},
   {m:4,mn:"Estratégico",t:"¿Identificas oportunidades donde la IA podría ahorrar tiempo o mejorar resultados en tu entorno?",o:["No sabría dónde aplicarla","Veo una o dos oportunidades obvias","Detecto múltiples oportunidades y priorizo las de mayor impacto"]},
   {m:4,mn:"Estratégico",t:"¿Has combinado varias herramientas o pasos de IA para lograr un resultado más grande?",o:["No, uso una herramienta para una cosa a la vez","He encadenado un par de pasos manualmente","Diseño flujos donde la IA se integra con otras herramientas y procesos"]},
   {m:4,mn:"Estratégico",t:"Cuando piensas en adoptar IA, ¿consideras el retorno (tiempo, costo, calidad) frente al esfuerzo?",o:["No lo evalúo, solo pruebo","Lo considero de forma intuitiva","Evalúo costo-beneficio y decido con criterio dónde invertir el esfuerzo"]},
-  {m:4,mn:"Estratégico",t:"¿Qué tan preparado te sientes para enseñar o impulsar el uso de IA en tu equipo o entorno?",o:["Aún soy yo quien necesita aprender","Podría compartir lo básico que sé","Me siento capaz de liderar la adopción de IA en mi entorno"]},
   // ── 5) ÉTICA Y CRITERIO ──
   {m:5,mn:"Ética y Criterio",t:"¿Verificas la información que te da la IA antes de usarla en algo importante?",o:["Asumo que lo que dice es correcto","A veces la reviso si algo me parece raro","Siempre contrasto los datos clave antes de confiar en ellos"]},
   {m:5,mn:"Ética y Criterio",t:"¿Sabes que la IA puede “alucinar” (inventar datos que suenan ciertos)?",o:["No sabía que eso pasaba","Lo he notado alguna vez","Lo tengo presente y diseño mi uso para detectarlo y mitigarlo"]},
   {m:5,mn:"Ética y Criterio",t:"¿Tienes cuidado con la información sensible o confidencial que escribes en una IA?",o:["No me había puesto a pensar en eso","Evito algunos datos, pero sin un criterio claro","Tengo reglas claras sobre qué información nunca comparto con una IA"]},
   {m:5,mn:"Ética y Criterio",t:"¿Reconoces cuándo una respuesta de IA podría tener sesgos o estar incompleta?",o:["Tomo las respuestas tal cual","A veces percibo que falta algo","Evalúo de forma crítica los sesgos, vacíos y puntos de vista faltantes"]},
-  {m:5,mn:"Ética y Criterio",t:"¿Qué tan claro tienes cuándo es apropiado usar IA, declararlo o cuándo NO conviene usarla?",o:["No me he planteado esa pregunta","Tengo dudas sobre cuándo es apropiado","Tengo criterio claro sobre el uso ético, transparente y responsable de la IA"]}
+  // ── 6) TUS EXPECTATIVAS (preguntas abiertas, sin puntaje) ──
+  {m:6,mn:"Tus expectativas",open:true,o:[],t:"¿Qué esperas lograr al terminar este curso? Describe tu meta principal."},
+  {m:6,mn:"Tus expectativas",open:true,o:[],t:"¿Qué te gustaría aprender o saber hacer con IA que hoy no puedes?"},
+  {m:6,mn:"Tus expectativas",open:true,o:[],t:"¿En qué parte de tu trabajo, tu estudio o tu vida quieres aplicar la IA?"},
+  {m:6,mn:"Tus expectativas",open:true,o:[],t:"¿Qué dudas, miedos o barreras sientes hoy frente a la IA?"},
+  {m:6,mn:"Tus expectativas",open:true,o:[],t:"Si dentro de unos meses este curso fuera un éxito total para ti, ¿qué habría cambiado en ti o en tu trabajo?"}
 ];
 
 const MODS = [
-  {id:1,name:"Fundacional",max:20},
-  {id:2,name:"Aplicativo",max:20},
-  {id:3,name:"Interactivo",max:20},
-  {id:4,name:"Estratégico",max:20},
-  {id:5,name:"Ética y Criterio",max:20}
+  {id:1,name:"Fundacional",max:16},
+  {id:2,name:"Aplicativo",max:16},
+  {id:3,name:"Interactivo",max:16},
+  {id:4,name:"Estratégico",max:16},
+  {id:5,name:"Ética y Criterio",max:16}
 ];
 
 const LVLS = [
@@ -1124,21 +1129,30 @@ function renderQ() {
   const q = QS[S.currentQ];
   const i = S.currentQ;
   const n = QS.length;
-  document.getElementById("q-mod").textContent = `Dimensión ${q.m}: ${q.mn}`;
+  document.getElementById("q-mod").textContent = q.open ? `✍️ ${q.mn}` : `Dimensión ${q.m}: ${q.mn}`;
   document.getElementById("q-cnt").textContent = `${i+1} / ${n}`;
   document.getElementById("prog-fill").style.width = `${((i+1)/n)*100}%`;
-  document.getElementById("q-num").textContent = `Pregunta ${i+1}`;
+  document.getElementById("q-num").textContent = q.open ? "Pregunta abierta" : `Pregunta ${i+1}`;
   document.getElementById("q-text").textContent = q.t;
 
   const container = document.getElementById("opts");
   container.innerHTML = "";
-  ["A","B","C"].forEach((ltr, j) => {
-    const btn = document.createElement("button");
-    btn.className = "opt" + (S.answers[i] === j ? " sel" : "");
-    btn.innerHTML = `<span class="opt-letter">${ltr}</span><span class="opt-text">${q.o[j]}</span>`;
-    btn.onclick = () => selectOpt(j);
-    container.appendChild(btn);
-  });
+  if (q.open) {
+    const ta = document.createElement("textarea");
+    ta.placeholder = "Escribe tu respuesta aquí… (opcional, pero nos ayuda mucho)";
+    ta.value = typeof S.answers[i] === "string" ? S.answers[i] : "";
+    ta.style.cssText = "width:100%;box-sizing:border-box;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:14px 16px;color:#fff;font-family:inherit;font-size:.95rem;line-height:1.55;resize:vertical;min-height:120px;outline:none;";
+    ta.oninput = () => { S.answers[i] = ta.value; updateNextBtn(); };
+    container.appendChild(ta);
+  } else {
+    ["A","B","C"].forEach((ltr, j) => {
+      const btn = document.createElement("button");
+      btn.className = "opt" + (S.answers[i] === j ? " sel" : "");
+      btn.innerHTML = `<span class="opt-letter">${ltr}</span><span class="opt-text">${q.o[j]}</span>`;
+      btn.onclick = () => selectOpt(j);
+      container.appendChild(btn);
+    });
+  }
 
   document.getElementById("btn-prev").style.display = i === 0 ? "none" : "";
   updateNextBtn();
@@ -1157,13 +1171,15 @@ function selectOpt(j) {
 
 function updateNextBtn() {
   const btn = document.getElementById("btn-next");
-  const last = S.currentQ === QS.length - 1;
-  btn.disabled = S.answers[S.currentQ] === null;
+  const i = S.currentQ, q = QS[i];
+  const last = i === QS.length - 1;
+  btn.disabled = q.open ? false : (S.answers[i] === null);
   btn.textContent = last ? "Ver mi resultado ✨" : "Siguiente →";
 }
 
 function nextQ() {
-  if (S.answers[S.currentQ] === null) return;
+  const q = QS[S.currentQ];
+  if (!q.open && S.answers[S.currentQ] === null) return;
   if (S.currentQ < QS.length - 1) { S.currentQ++; renderQ(); }
   else finish();
 }
@@ -1177,10 +1193,15 @@ function prevQ() {
 ══════════════════════════════════ */
 function compute() {
   const pts = [0,2,4];
-  const total = S.answers.reduce((s,a) => s + (a!==null ? pts[a] : 0), 0);
   const modScores = {};
   MODS.forEach(m => { modScores[m.id] = 0; });
-  QS.forEach((q,i) => { if (S.answers[i]!==null) modScores[q.m] += pts[S.answers[i]]; });
+  let sum = 0;
+  QS.forEach((q,i) => {
+    const a = S.answers[i];
+    if (!q.open && typeof a === "number") { sum += pts[a]; modScores[q.m] += pts[a]; }
+  });
+  const maxScored = QS.filter(q => !q.open).length * 4; // 20 * 4 = 80
+  const total = maxScored ? Math.round(sum / maxScored * 100) : 0;
   return { total, modScores };
 }
 
@@ -1206,7 +1227,8 @@ async function finish() {
     score: total,
     nivel: lvl.name,
     nivelKey: lvl.key,
-    respuestas: S.answers.map(a => ["A","B","C"][a] || ""),
+    respuestas: S.answers.map((a,idx) => QS[idx].open ? (typeof a === "string" ? a : "") : (["A","B","C"][a] || "")),
+    expectativas: QS.map((q,idx) => q.open ? { q: q.t, a: (typeof S.answers[idx] === "string" ? S.answers[idx] : "").trim() } : null).filter(Boolean),
     modulos: MODS.map(m => ({ id: m.id, name: m.name, score: modScores[m.id], max: m.max }))
   };
 
@@ -1547,7 +1569,7 @@ function renderAnalytics(records) {
     _ci[`mod${mi}`] = new Chart(document.getElementById(`ch-mod-${mi}`), {
       type:'doughnut',
       data:{
-        labels:['Principiante','En Formación','Experto'],
+        labels:['Curioso/a','Explorador/a','Experto/a'],
         datasets:[{data:[mc.p,mc.f,mc.e], backgroundColor:['rgba(255,179,71,.85)','rgba(102,204,255,.85)','rgba(0,212,138,.85)'], borderWidth:0}]
       },
       options:{
@@ -1561,10 +1583,10 @@ function renderAnalytics(records) {
   });
 
   /* 5 ─ Per-question A/B/C bars (CSS, no Chart.js) */
-  const qCounts = Array.from({length:25}, ()=>({A:0,B:0,C:0,t:0}));
+  const qCounts = Array.from({length:20}, ()=>({A:0,B:0,C:0,t:0}));
   records.forEach(r => {
     if (!r.respuestas) return;
-    r.respuestas.forEach((ans,qi) => { if(qi<25){qCounts[qi][ans]=(qCounts[qi][ans]||0)+1; qCounts[qi].t++;} });
+    r.respuestas.forEach((ans,qi) => { if(qi<20){qCounts[qi][ans]=(qCounts[qi][ans]||0)+1; qCounts[qi].t++;} });
   });
 
   document.getElementById('qs-grid').innerHTML = qCounts.map((qc,qi) => {
@@ -1643,6 +1665,7 @@ function renderAdmin(records) {
           <div class="acc-field"><div class="acc-field-lbl">Puntaje</div><div class="acc-field-val" style="color:var(--gold)">${r.score} / 100</div></div>
         </div>
         <div class="acc-mods">${modChips}</div>
+        ${ (r.expectativas && r.expectativas.some(e=>e&&e.a)) ? `<div style="margin-top:12px;border-top:1px solid rgba(255,255,255,.08);padding-top:10px"><div style="font-size:.66rem;color:var(--gold);font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">✍️ Expectativas</div>${ r.expectativas.filter(e=>e&&e.a).map(e=>`<div style="margin-bottom:8px"><div style="font-size:.66rem;color:var(--t3);font-weight:700">${_esc(e.q)}</div><div style="font-size:.82rem;color:var(--t1);white-space:pre-wrap">${_esc(e.a)}</div></div>`).join('') }</div>` : '' }
         <button class="btn-detail" onclick="showDetail(${i})">📊 Ver perfil detallado por dimensión</button>
       </div>
     </div>`;
@@ -1668,6 +1691,7 @@ function toggleAcc(i) {
   arr.classList.toggle('open', open);
 }
 
+function _esc(t){return (t==null?"":String(t)).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));}
 let _modalChart = null;
 function showDetail(i) {
   const r = window._adminRecords[i];
@@ -1720,6 +1744,11 @@ function showDetail(i) {
     </div>`;
   }).join('');
 
+  const exp = (r.expectativas||[]).filter(e=>e && e.a);
+  document.getElementById('modal-exp').innerHTML = exp.length
+    ? exp.map(e=>`<div style="margin-bottom:12px"><div style="font-size:.72rem;color:var(--t3);font-weight:700;margin-bottom:4px">${_esc(e.q)}</div><div style="font-size:.88rem;color:var(--t1);background:rgba(255,255,255,.05);border-radius:8px;padding:9px 12px;white-space:pre-wrap;line-height:1.5">${_esc(e.a)}</div></div>`).join('')
+    : '<div style="color:var(--t3);font-size:.82rem">Este participante no respondió las preguntas abiertas.</div>';
+
   document.getElementById('detail-modal').style.display = 'block';
   document.body.style.overflow = 'hidden';
 }
@@ -1732,7 +1761,7 @@ function closeModal() {
 function _buildRows(records) {
   const hdrs = ["N°","Nombre","Email","Local / Área","Rol","Puntaje","Nivel",
     "D1-Fundacional","D2-Aplicativo","D3-Interactivo","D4-Estratégico","D5-Ética y Criterio",
-    ...Array.from({length:25},(_,i)=>`P${i+1}`),"Fecha"];
+    ...Array.from({length:20},(_,i)=>`P${i+1}`),...Array.from({length:5},(_,i)=>`Expectativa ${i+1}`),"Fecha"];
   const rows = records.map((r,i) => {
     const mods = r.modulos ? r.modulos.map(m=>`${m.score}/${m.max}`) : Array(5).fill("");
     return [i+1, r.nombre, r.email, r.tienda||"", r.rol||"", r.score, r.nivel,
@@ -2019,12 +2048,12 @@ function renderDashboard(records) {
   modNms.forEach((_,mi)=>{
     const mc={p:0,f:0,e:0};
     records.forEach(r=>{if(!r.modulos||!r.modulos[mi])return;const p=r.modulos[mi].max>0?r.modulos[mi].score/r.modulos[mi].max*100:0;if(p<34)mc.p++;else if(p<67)mc.f++;else mc.e++;});
-    _dci[`mod${mi}`]=new Chart(document.getElementById(`dch-mod-${mi}`),{type:'doughnut',data:{labels:['Principiante','En Formación','Experto'],datasets:[{data:[mc.p,mc.f,mc.e],backgroundColor:['rgba(255,179,71,.85)','rgba(102,204,255,.85)','rgba(0,212,138,.85)'],borderWidth:0}]},options:{plugins:{legend:{position:'bottom',labels:{color:'rgba(255,255,255,.6)',font:{size:9},boxWidth:8,padding:6}},datalabels:{color:'#fff',font:{weight:'bold',size:12},formatter:(v,ctx)=>{const t=ctx.dataset.data.reduce((a,b)=>a+b,0);return t&&v>0?Math.round(v/t*100)+'%':''}}}}});
+    _dci[`mod${mi}`]=new Chart(document.getElementById(`dch-mod-${mi}`),{type:'doughnut',data:{labels:['Curioso/a','Explorador/a','Experto/a'],datasets:[{data:[mc.p,mc.f,mc.e],backgroundColor:['rgba(255,179,71,.85)','rgba(102,204,255,.85)','rgba(0,212,138,.85)'],borderWidth:0}]},options:{plugins:{legend:{position:'bottom',labels:{color:'rgba(255,255,255,.6)',font:{size:9},boxWidth:8,padding:6}},datalabels:{color:'#fff',font:{weight:'bold',size:12},formatter:(v,ctx)=>{const t=ctx.dataset.data.reduce((a,b)=>a+b,0);return t&&v>0?Math.round(v/t*100)+'%':''}}}}});
   });
 
   // Question bars
-  const qc=Array.from({length:25},()=>({A:0,B:0,C:0,t:0}));
-  records.forEach(r=>{if(!r.respuestas)return;r.respuestas.forEach((ans,qi)=>{if(qi<25){qc[qi][ans]=(qc[qi][ans]||0)+1;qc[qi].t++;}});});
+  const qc=Array.from({length:20},()=>({A:0,B:0,C:0,t:0}));
+  records.forEach(r=>{if(!r.respuestas)return;r.respuestas.forEach((ans,qi)=>{if(qi<20){qc[qi][ans]=(qc[qi][ans]||0)+1;qc[qi].t++;}});});
   document.getElementById('dash-qs-grid').innerHTML=qc.map((q,qi)=>{
     const pA=q.t?Math.round(q.A/q.t*100):0,pB=q.t?Math.round(q.B/q.t*100):0,pC=q.t?Math.round(q.C/q.t*100):0;
     const txt=QS[qi]?QS[qi].t.slice(0,65)+(QS[qi].t.length>65?'…':''):'';
