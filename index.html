@@ -1,0 +1,2166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diagnóstico Inicial · Habilidades con IA | Politécnico Grancolombiano</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    :root {
+      --bg: #08101f;
+      --bg2: #0d1a2e;
+      --surface: rgba(255,255,255,0.05);
+      --surface2: rgba(255,255,255,0.08);
+      --border: rgba(255,255,255,0.1);
+      --coral: #E8401C;
+      --coral2: #ff5a34;
+      --navy: #003087;
+      --gold: #D4A847;
+      --cyan: #00C8FF;
+      --green: #00d48a;
+      --white: #FFFFFF;
+      --t1: rgba(255,255,255,0.95);
+      --t2: rgba(255,255,255,0.65);
+      --t3: rgba(255,255,255,0.35);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html{scroll-behavior:smooth;}
+    body{
+      background:var(--bg);
+      color:var(--t1);
+      font-family:'Segoe UI',system-ui,sans-serif;
+      min-height:100vh;
+      overflow-x:hidden;
+    }
+
+    /* ── PARTICLES ── */
+    #cv{position:fixed;inset:0;z-index:0;pointer-events:none;}
+
+    /* ── LAYOUT ── */
+    .wrap{position:relative;z-index:1;}
+    .view{display:none;}
+    .view.active{display:block;}
+
+    /* ── HEADER ── */
+    .hdr{
+      position:sticky;top:0;z-index:100;
+      background:rgba(8,16,31,0.85);
+      backdrop-filter:blur(20px);
+      border-bottom:1px solid var(--border);
+      padding:12px 20px;
+      display:flex;align-items:center;justify-content:center;
+      gap:16px;
+    }
+    .hdr-poli{
+      font-size:0.7rem;font-weight:800;letter-spacing:2px;
+      text-transform:uppercase;color:var(--t2);
+      border:1px solid rgba(255,255,255,0.2);
+      padding:3px 10px;border-radius:4px;
+    }
+    .hdr-sep{color:var(--t3);font-size:1rem;}
+    .hdr-imperial{
+      font-size:1rem;font-weight:900;letter-spacing:0.5px;
+      background:linear-gradient(135deg,var(--coral),var(--gold));
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+      background-clip:text;
+    }
+    .hdr-sub{font-size:0.65rem;color:var(--t3);letter-spacing:1px;text-transform:uppercase;}
+
+    /* ── TOAST ── */
+    #toast{
+      position:fixed;bottom:28px;left:50%;
+      transform:translateX(-50%) translateY(60px);
+      background:rgba(232,64,28,0.95);
+      backdrop-filter:blur(10px);
+      color:#fff;padding:10px 24px;border-radius:50px;
+      font-size:0.85rem;font-weight:700;z-index:999;
+      transition:.3s ease;opacity:0;white-space:nowrap;
+      box-shadow:0 4px 20px rgba(232,64,28,0.4);
+    }
+    #toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+
+    /* ── GLASS CARD ── */
+    .glass{
+      background:var(--surface);
+      border:1px solid var(--border);
+      border-radius:20px;
+      backdrop-filter:blur(16px);
+    }
+    .glass-strong{
+      background:rgba(255,255,255,0.07);
+      border:1px solid rgba(255,255,255,0.14);
+      border-radius:20px;
+      backdrop-filter:blur(20px);
+    }
+
+    /* ═══ INTRO ═══ */
+    .intro-outer{max-width:660px;margin:0 auto;padding:40px 20px 80px;}
+    .intro-badge{
+      display:inline-flex;align-items:center;gap:8px;
+      background:rgba(232,64,28,0.15);
+      border:1px solid rgba(232,64,28,0.4);
+      color:var(--coral2);
+      font-size:0.75rem;font-weight:800;letter-spacing:2px;
+      text-transform:uppercase;
+      padding:6px 16px;border-radius:50px;margin-bottom:20px;
+    }
+    .intro-title{
+      font-size:2.4rem;font-weight:900;line-height:1.1;
+      margin-bottom:14px;
+    }
+    .grad-text{
+      background:linear-gradient(135deg,var(--coral),var(--gold),#fff);
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+      background-clip:text;
+    }
+    .intro-desc{font-size:0.98rem;color:var(--t2);max-width:480px;margin:0 auto 28px;line-height:1.65;}
+
+    .pillars{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:32px;}
+    .pillar{
+      padding:7px 16px;border-radius:50px;
+      font-size:0.82rem;font-weight:700;
+      display:flex;align-items:center;gap:6px;
+    }
+    .pillar-a{background:rgba(0,48,135,0.25);border:1px solid rgba(0,48,135,0.5);color:#6ba3ff;}
+    .pillar-f{background:rgba(0,212,138,0.12);border:1px solid rgba(0,212,138,0.3);color:#00d48a;}
+    .pillar-m{background:rgba(232,64,28,0.15);border:1px solid rgba(232,64,28,0.35);color:var(--coral2);}
+
+    .mods-grid{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:8px;margin-bottom:32px;
+    }
+    @media(max-width:520px){.mods-grid{grid-template-columns:repeat(2,1fr);}}
+    .mod-chip{
+      background:var(--surface);border:1px solid var(--border);
+      border-radius:12px;padding:10px 8px;text-align:center;
+      font-size:0.72rem;font-weight:600;color:var(--t2);
+      transition:.2s;
+    }
+    .mod-chip:hover{background:var(--surface2);border-color:rgba(232,64,28,0.3);}
+    .mod-chip .mn{
+      display:block;font-size:1.3rem;font-weight:900;
+      background:linear-gradient(135deg,var(--coral),var(--gold));
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+      background-clip:text;
+      line-height:1.2;margin-bottom:4px;
+    }
+
+    /* FORM */
+    .form-card{padding:28px;}
+    .form-title{
+      font-size:1rem;font-weight:800;color:var(--t1);
+      margin-bottom:20px;display:flex;align-items:center;gap:8px;
+    }
+    .frow{margin-bottom:14px;}
+    .frow label{
+      display:block;font-size:0.72rem;font-weight:800;
+      color:var(--t3);text-transform:uppercase;letter-spacing:1px;
+      margin-bottom:6px;
+    }
+    .frow input,.frow select{
+      width:100%;padding:12px 16px;
+      background:rgba(255,255,255,0.06);
+      border:1.5px solid rgba(255,255,255,0.12);
+      border-radius:10px;color:var(--t1);
+      font-size:0.93rem;outline:none;transition:.2s;
+      font-family:inherit;
+    }
+    .frow input:focus,.frow select:focus{
+      border-color:rgba(232,64,28,0.6);
+      background:rgba(232,64,28,0.06);
+      box-shadow:0 0 0 3px rgba(232,64,28,0.1);
+    }
+    .frow input::placeholder{color:var(--t3);}
+    .frow select option{background:#1a2540;color:#fff;}
+    .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    @media(max-width:480px){.fgrid{grid-template-columns:1fr;}}
+
+    .btn-start{
+      width:100%;padding:16px;margin-top:8px;
+      background:linear-gradient(135deg,var(--coral),#c73214);
+      color:#fff;border:none;border-radius:12px;
+      font-size:1rem;font-weight:900;cursor:pointer;
+      letter-spacing:0.5px;transition:.2s;
+      display:flex;align-items:center;justify-content:center;gap:8px;
+      box-shadow:0 4px 20px rgba(232,64,28,0.35);
+    }
+    .btn-start:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(232,64,28,0.5);}
+    .btn-start:active{transform:translateY(0);}
+    .privacy{text-align:center;font-size:0.72rem;color:var(--t3);margin-top:10px;}
+
+    /* ═══ QUIZ ═══ */
+    .quiz-outer{max-width:680px;margin:0 auto;padding:24px 20px 80px;}
+
+    .prog-wrap{margin-bottom:22px;}
+    .prog-meta{display:flex;justify-content:space-between;margin-bottom:8px;}
+    .prog-mod{font-size:0.72rem;font-weight:800;color:var(--coral2);text-transform:uppercase;letter-spacing:1.5px;}
+    .prog-count{font-size:0.8rem;font-weight:700;color:var(--t2);}
+    .prog-bar{
+      height:4px;background:rgba(255,255,255,0.08);
+      border-radius:50px;overflow:hidden;
+    }
+    .prog-fill{
+      height:100%;border-radius:50px;
+      background:linear-gradient(90deg,var(--coral),var(--gold));
+      transition:width .5s ease;
+      box-shadow:0 0 8px rgba(232,64,28,0.5);
+    }
+
+    .q-card{
+      padding:32px 28px 24px;
+      margin-bottom:16px;
+      animation:fadeUp .35s ease;
+    }
+    @keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+    .q-num{
+      font-size:0.7rem;font-weight:800;color:var(--coral2);
+      text-transform:uppercase;letter-spacing:2px;margin-bottom:12px;
+    }
+    .q-text{
+      font-size:1.08rem;font-weight:700;color:var(--t1);
+      line-height:1.5;margin-bottom:24px;
+    }
+
+    .opts{display:flex;flex-direction:column;gap:10px;}
+    .opt{
+      display:flex;align-items:flex-start;gap:14px;
+      padding:14px 16px;
+      background:rgba(255,255,255,0.04);
+      border:1.5px solid rgba(255,255,255,0.08);
+      border-radius:14px;cursor:pointer;
+      text-align:left;width:100%;
+      color:var(--t2);font-family:inherit;
+      transition:all .2s;
+    }
+    .opt:hover{
+      background:rgba(232,64,28,0.08);
+      border-color:rgba(232,64,28,0.3);
+      color:var(--t1);
+      transform:translateX(4px);
+    }
+    .opt.sel{
+      background:rgba(232,64,28,0.12);
+      border-color:rgba(232,64,28,0.6);
+      color:var(--t1);
+      box-shadow:0 0 20px rgba(232,64,28,0.15);
+    }
+    .opt-letter{
+      flex-shrink:0;width:28px;height:28px;border-radius:50%;
+      background:rgba(255,255,255,0.08);
+      border:1.5px solid rgba(255,255,255,0.15);
+      display:flex;align-items:center;justify-content:center;
+      font-size:0.75rem;font-weight:900;color:var(--t2);
+      margin-top:2px;transition:.2s;
+    }
+    .opt.sel .opt-letter{
+      background:var(--coral);border-color:var(--coral);
+      color:#fff;box-shadow:0 0 10px rgba(232,64,28,0.5);
+    }
+    .opt-text{font-size:0.9rem;line-height:1.5;padding-top:3px;}
+
+    .q-nav{display:flex;gap:10px;}
+    .btn-prev{
+      padding:13px 20px;
+      background:rgba(255,255,255,0.05);
+      border:1.5px solid rgba(255,255,255,0.12);
+      border-radius:10px;color:var(--t2);
+      font-size:0.88rem;font-weight:700;cursor:pointer;
+      transition:.2s;font-family:inherit;
+    }
+    .btn-prev:hover{background:rgba(255,255,255,0.09);color:var(--t1);}
+    .btn-next{
+      flex:1;padding:14px 20px;
+      background:linear-gradient(135deg,var(--coral),#c73214);
+      color:#fff;border:none;border-radius:10px;
+      font-size:0.93rem;font-weight:800;cursor:pointer;
+      transition:.2s;letter-spacing:.3px;
+      box-shadow:0 4px 16px rgba(232,64,28,0.3);
+      font-family:inherit;
+    }
+    .btn-next:hover{transform:translateY(-2px);box-shadow:0 6px 22px rgba(232,64,28,0.45);}
+    .btn-next:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none;}
+
+    /* saving overlay */
+    .saving-overlay{
+      position:fixed;inset:0;z-index:200;
+      background:rgba(8,16,31,0.92);
+      backdrop-filter:blur(10px);
+      display:none;align-items:center;justify-content:center;
+      flex-direction:column;gap:16px;
+    }
+    .saving-overlay.show{display:flex;}
+    .spin{
+      width:44px;height:44px;border-radius:50%;
+      border:3px solid rgba(232,64,28,0.25);
+      border-top-color:var(--coral);
+      animation:spin .7s linear infinite;
+    }
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .saving-text{font-size:0.9rem;font-weight:700;color:var(--t2);}
+
+    /* ═══ RESULT ═══ */
+    .res-outer{max-width:720px;margin:0 auto;padding:32px 20px 80px;}
+
+    .res-hero{
+      text-align:center;padding:44px 28px 36px;
+      margin-bottom:16px;
+      position:relative;overflow:hidden;
+    }
+    .res-hero::before{
+      content:'';position:absolute;
+      top:-60px;left:50%;transform:translateX(-50%);
+      width:300px;height:300px;border-radius:50%;
+      filter:blur(80px);opacity:.25;z-index:0;
+    }
+    .lv-p .res-hero::before{background:#ff8c00;}
+    .lv-f .res-hero::before{background:#00aaff;}
+    .lv-e .res-hero::before{background:var(--green);}
+    .res-hero>*{position:relative;z-index:1;}
+
+    .res-badge{
+      display:inline-block;
+      padding:7px 20px;border-radius:50px;
+      font-size:0.75rem;font-weight:800;letter-spacing:2px;
+      text-transform:uppercase;margin-bottom:20px;
+    }
+    .lv-p .res-badge{background:rgba(255,140,0,0.15);border:1px solid rgba(255,140,0,0.4);color:#ffb347;}
+    .lv-f .res-badge{background:rgba(0,170,255,0.12);border:1px solid rgba(0,170,255,0.35);color:#66ccff;}
+    .lv-e .res-badge{background:rgba(0,212,138,0.12);border:1px solid rgba(0,212,138,0.35);color:#00d48a;}
+
+    .score-circle{
+      width:140px;height:140px;border-radius:50%;
+      margin:0 auto 20px;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      position:relative;
+    }
+    .lv-p .score-circle{background:linear-gradient(135deg,#ff8c00,#e65100);box-shadow:0 0 40px rgba(255,140,0,0.35);}
+    .lv-f .score-circle{background:linear-gradient(135deg,#00aaff,#0055cc);box-shadow:0 0 40px rgba(0,170,255,0.35);}
+    .lv-e .score-circle{background:linear-gradient(135deg,#00d48a,#00875a);box-shadow:0 0 40px rgba(0,212,138,0.35);}
+
+    .score-num{font-size:3rem;font-weight:900;color:#fff;line-height:1;}
+    .score-lbl{font-size:0.65rem;color:rgba(255,255,255,0.7);font-weight:700;letter-spacing:2px;}
+
+    .res-name{font-size:1.7rem;font-weight:900;margin-bottom:6px;}
+    .res-level{font-size:1rem;font-weight:700;margin-bottom:14px;}
+    .lv-p .res-level{color:#ffb347;}
+    .lv-f .res-level{color:#66ccff;}
+    .lv-e .res-level{color:#00d48a;}
+
+    .res-msg{font-size:0.93rem;color:var(--t2);max-width:480px;margin:0 auto 20px;line-height:1.65;}
+
+    .res-pillars{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;}
+    .res-p{padding:5px 14px;border-radius:50px;font-size:0.78rem;font-weight:700;}
+    .res-p.a{background:rgba(107,163,255,0.15);color:#6ba3ff;}
+    .res-p.f{background:rgba(0,212,138,0.12);color:#00d48a;}
+    .res-p.m{background:rgba(232,64,28,0.15);color:var(--coral2);}
+
+    /* Chart card */
+    .chart-card{padding:28px;margin-bottom:14px;}
+    .sec-title{font-size:0.9rem;font-weight:800;color:var(--t1);margin-bottom:20px;display:flex;align-items:center;gap:8px;}
+    .chart-wrap{position:relative;height:280px;}
+
+    /* Bars */
+    .bars-card{padding:28px;margin-bottom:14px;}
+    .bar-row{display:grid;grid-template-columns:130px 1fr 44px;align-items:center;gap:10px;margin-bottom:12px;}
+    @media(max-width:480px){.bar-row{grid-template-columns:90px 1fr 36px;}}
+    .bar-lbl{font-size:0.78rem;font-weight:600;color:var(--t2);text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .bar-track{height:8px;background:rgba(255,255,255,0.07);border-radius:50px;overflow:hidden;}
+    .bar-fill{height:100%;border-radius:50px;background:linear-gradient(90deg,var(--coral),var(--gold));transition:width 1s ease;}
+    .bar-pct{font-size:0.8rem;font-weight:800;color:var(--gold);}
+
+    .res-actions{display:flex;gap:10px;flex-wrap:wrap;}
+    .btn-sec{
+      flex:1;min-width:140px;padding:13px 16px;
+      background:rgba(255,255,255,0.05);
+      border:1.5px solid rgba(255,255,255,0.12);
+      border-radius:12px;color:var(--t2);
+      font-size:0.88rem;font-weight:700;cursor:pointer;
+      transition:.2s;text-align:center;font-family:inherit;
+    }
+    .btn-sec:hover{background:rgba(255,255,255,0.09);color:var(--t1);}
+    .btn-sec.primary{
+      background:linear-gradient(135deg,var(--navy),#0055cc);
+      color:#fff;border-color:transparent;
+      box-shadow:0 4px 16px rgba(0,48,135,0.4);
+    }
+    .btn-sec.primary:hover{transform:translateY(-2px);box-shadow:0 6px 22px rgba(0,48,135,0.5);}
+
+    /* ═══ ADMIN ═══ */
+    .admin-login-wrap{max-width:400px;margin:60px auto;padding:0 20px;}
+    .admin-login{text-align:center;padding:40px 28px;}
+    .lock-ico{font-size:2.8rem;margin-bottom:14px;}
+    .admin-title{font-size:1.2rem;font-weight:900;margin-bottom:6px;}
+    .admin-sub{font-size:0.85rem;color:var(--t2);margin-bottom:24px;}
+
+    .admin-outer{max-width:1100px;margin:0 auto;padding:28px 20px 80px;}
+    .admin-hdr{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:24px;}
+    .admin-h1{font-size:1.4rem;font-weight:900;}
+
+    .btn-row{display:flex;gap:10px;flex-wrap:wrap;}
+    .btn-export{
+      padding:11px 20px;
+      background:linear-gradient(135deg,#00875a,#00d48a);
+      color:#fff;border:none;border-radius:10px;
+      font-size:0.85rem;font-weight:800;cursor:pointer;
+      transition:.2s;font-family:inherit;
+      display:flex;align-items:center;gap:6px;
+      box-shadow:0 4px 14px rgba(0,212,138,0.3);
+    }
+    .btn-export:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,212,138,0.4);}
+    .btn-refresh{
+      padding:11px 18px;
+      background:rgba(0,200,255,0.1);
+      border:1.5px solid rgba(0,200,255,0.3);
+      border-radius:10px;color:#66ddff;
+      font-size:0.85rem;font-weight:700;cursor:pointer;
+      transition:.2s;font-family:inherit;
+    }
+    .btn-refresh:hover{background:rgba(0,200,255,0.15);}
+    .btn-del{
+      padding:11px 18px;
+      background:rgba(239,83,80,0.1);
+      border:1.5px solid rgba(239,83,80,0.3);
+      border-radius:10px;color:#ff8a8a;
+      font-size:0.85rem;font-weight:700;cursor:pointer;
+      transition:.2s;font-family:inherit;
+    }
+    .btn-del:hover{background:rgba(239,83,80,0.15);}
+
+    .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:22px;}
+    .stat{padding:18px 20px;border-radius:14px;}
+    .stat-lbl{font-size:0.72rem;font-weight:800;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+    .stat-val{font-size:1.9rem;font-weight:900;line-height:1;}
+    .stat-sub{font-size:0.75rem;color:var(--t3);margin-top:4px;}
+
+    .tbl-wrap{border-radius:16px;overflow:hidden;border:1px solid var(--border);}
+    table{width:100%;border-collapse:collapse;font-size:0.8rem;}
+    thead tr{background:rgba(0,48,135,0.5);}
+    th{padding:11px 14px;text-align:left;font-size:0.72rem;font-weight:800;letter-spacing:.5px;color:var(--t2);white-space:nowrap;}
+    td{padding:11px 14px;border-bottom:1px solid rgba(255,255,255,0.05);vertical-align:middle;}
+    tr:hover td{background:rgba(255,255,255,0.03);}
+    tr:last-child td{border-bottom:none;}
+
+    .pill{display:inline-block;padding:3px 10px;border-radius:50px;font-size:0.7rem;font-weight:800;white-space:nowrap;}
+    .pill-p{background:rgba(255,140,0,0.15);color:#ffb347;}
+    .pill-f{background:rgba(0,170,255,0.12);color:#66ccff;}
+    .pill-e{background:rgba(0,212,138,0.12);color:#00d48a;}
+
+    .mini-bar{display:flex;align-items:center;gap:6px;}
+    .mini-track{width:52px;height:4px;background:rgba(255,255,255,0.08);border-radius:50px;overflow:hidden;}
+    .mini-fill{height:100%;border-radius:50px;background:linear-gradient(90deg,var(--coral),var(--gold));}
+
+    .empty{text-align:center;padding:60px 20px;color:var(--t3);}
+    .empty-ico{font-size:3rem;margin-bottom:12px;}
+
+    /* confetti */
+    .confetti-piece{
+      position:fixed;top:-10px;
+      width:10px;height:10px;border-radius:2px;
+      animation:fall linear forwards;
+      z-index:300;pointer-events:none;
+    }
+    @keyframes fall{
+      0%{transform:translateY(0) rotate(0);opacity:1;}
+      100%{transform:translateY(105vh) rotate(720deg);opacity:0;}
+    }
+
+    /* ── ANALYTICS PANEL ── */
+    .analytics-wrap{margin-bottom:22px;}
+    .an-tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+    .an-tab{padding:9px 18px;background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:8px;color:var(--t2);font-size:.82rem;font-weight:700;cursor:pointer;transition:.2s;font-family:inherit;}
+    .an-tab:hover{border-color:rgba(0,200,255,.4);color:var(--cyan);}
+    .an-tab.active{background:rgba(0,200,255,.1);border-color:rgba(0,200,255,.5);color:var(--cyan);}
+    .an-panel{display:none;}
+    .an-panel.active{display:block;}
+    .charts-2col{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+    .chart-box{padding:20px;}
+    .chart-title{font-size:.76rem;font-weight:800;color:var(--t2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px;}
+    .mods-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;}
+    .mod-chart-box{padding:16px 18px;}
+    .mod-chart-name{font-size:.73rem;font-weight:800;color:var(--cyan);margin-bottom:10px;}
+    .qs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px;}
+    .q-chart-box{padding:14px 16px;}
+    .q-chart-title{font-size:.7rem;font-weight:700;color:var(--t2);margin-bottom:10px;line-height:1.4;}
+    .ans-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+    .ans-lbl{width:18px;font-size:.75rem;font-weight:900;text-align:center;}
+    .ans-lbl-a{color:#00d48a;}.ans-lbl-b{color:#66ccff;}.ans-lbl-c{color:var(--coral);}
+    .ans-track{flex:1;background:rgba(255,255,255,.07);border-radius:50px;height:9px;overflow:hidden;}
+    .ans-fill{height:100%;border-radius:50px;transition:width .6s ease;}
+    .ans-fill-a{background:linear-gradient(90deg,#00d48a,#00a36b);}
+    .ans-fill-b{background:linear-gradient(90deg,#66ccff,#00a0e0);}
+    .ans-fill-c{background:linear-gradient(90deg,var(--coral),#c73214);}
+    .ans-pct{font-size:.7rem;color:var(--t3);width:30px;text-align:right;}
+    .btn-export-sheets{
+      padding:11px 20px;
+      background:linear-gradient(135deg,#1a73e8,#0d5dbd);
+      color:#fff;border:none;border-radius:10px;
+      font-size:.85rem;font-weight:800;cursor:pointer;
+      transition:.2s;font-family:inherit;
+      display:flex;align-items:center;gap:6px;
+      box-shadow:0 4px 14px rgba(26,115,232,.3);
+    }
+    .btn-export-sheets:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(26,115,232,.45);}
+
+    /* ── ACCORDION ── */
+    .acc-wrap{display:flex;flex-direction:column;gap:10px;margin-bottom:24px;}
+    .acc-item{border-radius:14px;overflow:hidden;transition:.2s;}
+    .acc-head{
+      display:grid;grid-template-columns:36px 1fr auto auto 24px;
+      align-items:center;gap:12px;
+      padding:14px 18px;cursor:pointer;
+      transition:.15s;
+    }
+    .acc-head:hover{background:rgba(255,255,255,.04);}
+    .acc-rank{font-size:.75rem;font-weight:900;color:var(--t3);text-align:center;}
+    .acc-name{font-size:.95rem;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .acc-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end;}
+    .acc-date{font-size:.68rem;color:var(--t3);white-space:nowrap;}
+    .acc-arrow{font-size:.75rem;color:var(--t3);transition:transform .25s;user-select:none;}
+    .acc-arrow.open{transform:rotate(180deg);}
+    .acc-body{
+      padding:0 18px;max-height:0;overflow:hidden;
+      transition:max-height .35s ease,padding .25s ease;
+    }
+    .acc-body.open{max-height:700px;padding:0 18px 16px;}
+    .acc-detail-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-bottom:14px;}
+    .acc-field{background:rgba(255,255,255,.04);border-radius:8px;padding:8px 10px;}
+    .acc-field-lbl{font-size:.62rem;color:var(--t3);text-transform:uppercase;font-weight:800;letter-spacing:.4px;margin-bottom:3px;}
+    .acc-field-val{font-size:.82rem;font-weight:700;}
+    .acc-mods{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+    .acc-mod-chip{
+      background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
+      border-radius:6px;padding:4px 10px;font-size:.72rem;
+      display:flex;gap:5px;align-items:center;
+    }
+    .acc-mod-chip strong{color:var(--gold);}
+    .btn-detail{
+      padding:8px 18px;background:linear-gradient(135deg,var(--coral),#c73214);
+      color:#fff;border:none;border-radius:8px;font-size:.78rem;font-weight:800;
+      cursor:pointer;font-family:inherit;transition:.15s;
+    }
+    .btn-detail:hover{transform:translateY(-1px);}
+
+    /* ── MODAL detalle persona ── */
+    #detail-modal{
+      display:none;position:fixed;inset:0;z-index:600;
+      background:rgba(8,16,31,.96);backdrop-filter:blur(12px);
+      overflow-y:auto;
+    }
+    .modal-inner{max-width:520px;margin:32px auto;padding:20px 20px 60px;}
+    .modal-close{
+      display:flex;align-items:center;gap:6px;
+      background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+      border-radius:8px;padding:8px 16px;color:var(--t2);
+      font-size:.82rem;font-weight:700;cursor:pointer;font-family:inherit;
+      margin-bottom:20px;transition:.15s;
+    }
+    .modal-close:hover{background:rgba(255,255,255,.1);}
+    .modal-hero{text-align:center;margin-bottom:20px;}
+    .modal-name{font-size:1.3rem;font-weight:900;margin-bottom:4px;}
+    .modal-sub{font-size:.8rem;color:var(--t2);}
+    .modal-mods-bars{margin-bottom:20px;}
+    .modal-bar-row{display:grid;grid-template-columns:110px 1fr 50px;align-items:center;gap:8px;margin-bottom:9px;}
+    .modal-bar-lbl{font-size:.72rem;color:var(--t2);font-weight:600;text-align:right;}
+    .modal-bar-track{background:rgba(255,255,255,.07);border-radius:50px;height:10px;overflow:hidden;}
+    .modal-bar-fill{height:100%;border-radius:50px;background:linear-gradient(90deg,var(--coral),var(--gold));transition:width .6s ease;}
+    .modal-bar-val{font-size:.72rem;font-weight:800;color:var(--gold);}
+
+    /* Dimensiones grid más grandes */
+    .mods-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;}
+    .mod-chart-box{padding:18px 20px;}
+
+    @media(max-width:600px){.charts-2col{grid-template-columns:1fr;}.acc-head{grid-template-columns:28px 1fr auto 20px;}}
+    @media(max-width:480px){
+      .intro-title{font-size:1.8rem;}
+      .q-card{padding:22px 18px 18px;}
+      .q-text{font-size:1rem;}
+      .form-card{padding:20px 16px;}
+    }
+  </style>
+</head>
+<body>
+
+<!-- PARTICLES -->
+<canvas id="cv"></canvas>
+
+<!-- MODAL: detalle por persona -->
+<div id="detail-modal">
+  <div class="modal-inner">
+    <button class="modal-close" onclick="closeModal()">← Volver al panel</button>
+    <div class="modal-hero">
+      <div class="modal-name" id="modal-name"></div>
+      <div class="modal-sub" id="modal-sub"></div>
+    </div>
+    <div class="glass chart-box" style="margin-bottom:18px">
+      <div class="chart-title">Perfil por dimensión</div>
+      <canvas id="modal-radar" height="260"></canvas>
+    </div>
+    <div class="glass chart-box">
+      <div class="chart-title">Detalle por dimensión</div>
+      <div class="modal-mods-bars" id="modal-bars"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SAVING OVERLAY -->
+<div class="saving-overlay" id="saving-overlay">
+  <div class="spin"></div>
+  <div class="saving-text">Guardando tu diagnóstico...</div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- HEADER -->
+<header class="hdr">
+  <span class="hdr-poli">Politécnico Grancolombiano</span>
+  <span class="hdr-sep">×</span>
+  <span class="hdr-imperial">Plaza Imperial</span>
+  <span class="hdr-sep">·</span>
+  <span class="hdr-sub">Curso IA · De Cero a Experto</span>
+</header>
+
+<div class="wrap">
+
+<!-- ═══ VIEW: INTRO ═══ -->
+<div id="view-intro" class="view active">
+  <div class="intro-outer" style="text-align:center">
+    <div class="intro-badge">🤖 Diagnóstico Inicial · Habilidades con IA</div>
+    <h1 class="intro-title">¿En qué punto estás con la<br><span class="grad-text">Inteligencia Artificial</span>?</h1>
+    <p class="intro-desc">Descubre tu punto de partida en el uso de la IA con 25 preguntas en 5 dimensiones clave. Te toma 8 minutos y al final sabrás exactamente en qué nivel arrancas.</p>
+
+    <div class="pillars">
+      <div class="pillar pillar-a">🧠 Comprender</div>
+      <div class="pillar pillar-f">⚡ Aplicar</div>
+      <div class="pillar pillar-m">🚀 Transformar</div>
+    </div>
+
+    <div class="mods-grid">
+      <div class="mod-chip"><span class="mn">1</span>Fundacional</div>
+      <div class="mod-chip"><span class="mn">2</span>Aplicativo</div>
+      <div class="mod-chip"><span class="mn">3</span>Interactivo</div>
+      <div class="mod-chip"><span class="mn">4</span>Estratégico</div>
+      <div class="mod-chip"><span class="mn">5</span>Ética y Criterio</div>
+    </div>
+
+    <div class="glass-strong form-card">
+      <div class="form-title">📋 Cuéntanos quién eres</div>
+      <div class="frow">
+        <label>Nombre completo *</label>
+        <input type="text" id="i-nombre" placeholder="Tu nombre y apellido" autocomplete="name"/>
+      </div>
+      <div class="frow">
+        <label>Correo electrónico *</label>
+        <input type="email" id="i-email" placeholder="tu@correo.com" autocomplete="email"/>
+      </div>
+      <div class="fgrid">
+        <div class="frow">
+          <label>Empresa / Organización</label>
+          <input type="text" id="i-tienda" placeholder="Ej: tu empresa o área"/>
+        </div>
+        <div class="frow">
+          <label>Tu rol</label>
+          <select id="i-rol">
+            <option value="">Selecciona...</option>
+            <option>Líder / Gerente</option>
+            <option>Profesional / Analista</option>
+            <option>Docente / Formador</option>
+            <option>Emprendedor / Independiente</option>
+            <option>Estudiante</option>
+            <option>Operativo / Asistente</option>
+            <option>Otro</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn-start" onclick="startQuiz()">✨ Comenzar Diagnóstico</button>
+      <p class="privacy">🔒 Tus respuestas son confidenciales y se usan únicamente para este curso</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ VIEW: QUIZ ═══ -->
+<div id="view-quiz" class="view">
+  <div class="quiz-outer">
+    <div class="prog-wrap">
+      <div class="prog-meta">
+        <span class="prog-mod" id="q-mod"></span>
+        <span class="prog-count" id="q-cnt"></span>
+      </div>
+      <div class="prog-bar"><div class="prog-fill" id="prog-fill"></div></div>
+    </div>
+    <div class="glass-strong q-card" id="q-card">
+      <div class="q-num" id="q-num"></div>
+      <div class="q-text" id="q-text"></div>
+      <div class="opts" id="opts"></div>
+    </div>
+    <div class="q-nav">
+      <button class="btn-prev" onclick="prevQ()" id="btn-prev">← Anterior</button>
+      <button class="btn-next" onclick="nextQ()" id="btn-next" disabled>Siguiente →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ VIEW: RESULT ═══ -->
+<div id="view-result" class="view">
+  <div class="res-outer">
+    <div class="glass-strong res-hero" id="res-hero">
+      <div class="res-badge" id="res-badge"></div>
+      <div class="score-circle" id="res-circle">
+        <div class="score-num" id="res-score">0</div>
+        <div class="score-lbl">PUNTOS</div>
+      </div>
+      <div class="res-name" id="res-name"></div>
+      <div class="res-level" id="res-level"></div>
+      <p class="res-msg" id="res-msg"></p>
+      <div class="res-pillars">
+        <span class="res-p a">🧠 Comprender</span>
+        <span class="res-p f">⚡ Aplicar</span>
+        <span class="res-p m">🚀 Transformar</span>
+      </div>
+    </div>
+
+    <div class="glass chart-card">
+      <div class="sec-title">📊 Tu perfil por dimensión</div>
+      <div class="chart-wrap"><canvas id="radar"></canvas></div>
+    </div>
+
+    <div class="glass bars-card">
+      <div class="sec-title">📈 Detalle por dimensión</div>
+      <div id="bars-list"></div>
+    </div>
+
+    <div class="res-actions">
+      <button class="btn-sec" id="btn-share" onclick="shareResult()" style="background:linear-gradient(135deg,#E8401C,#c73214);color:#fff;border-color:transparent;box-shadow:0 4px 16px rgba(232,64,28,0.3);">
+        📤 Compartir en Teams
+      </button>
+      <button class="btn-sec" onclick="restartQuiz()">🔄 Hacer de nuevo</button>
+    </div>
+    <p style="text-align:center;font-size:0.75rem;color:var(--t3);margin-top:12px;" id="share-hint">
+      Copia tu enlace y pégalo en el chat de Teams con <strong style="color:var(--coral2)">#MiDiagnóstico</strong>
+    </p>
+  </div>
+</div>
+
+<!-- ═══ VIEW: DASHBOARD PÚBLICO ═══ -->
+<div id="view-dashboard" class="view">
+  <div class="admin-outer">
+    <div style="text-align:center;padding:24px 0 14px">
+      <div style="font-size:1.5rem;font-weight:900;background:linear-gradient(135deg,var(--coral),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Dashboard Habilidades IA 2026</div>
+      <p style="color:var(--t2);font-size:.82rem;margin-top:4px">Plaza Imperial × Politécnico Grancolombiano — Solo lectura</p>
+      <button onclick="loadDashboard()" id="dash-refresh-btn" style="margin-top:12px;background:rgba(0,200,255,.08);border:1px solid rgba(0,200,255,.25);color:var(--cyan);border-radius:8px;padding:6px 16px;font-size:.78rem;font-weight:700;cursor:pointer;font-family:inherit">🔄 Actualizar datos</button>
+    </div>
+    <!-- ICONE Executive Report (loaded from GitHub) -->
+    <div id="dash-icone-report" style="display:none;background:rgba(212,168,71,.05);border:1px solid rgba(212,168,71,.2);border-radius:14px;padding:18px 20px;margin-bottom:18px">
+      <div style="font-size:.7rem;font-weight:900;color:var(--gold);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px">📊 Informe Ejecutivo ICONE</div>
+      <div id="dash-icone-content" style="font-size:.83rem;line-height:1.8;color:var(--t2)"></div>
+    </div>
+    <div class="stats-grid" id="dash-stats" style="margin-bottom:22px"></div>
+    <div class="an-tabs" id="dash-tabs">
+      <button class="an-tab active" onclick="switchDashTab('dist')">📊 Distribución</button>
+      <button class="an-tab" onclick="switchDashTab('mods')">📦 Por Dimensión</button>
+      <button class="an-tab" onclick="switchDashTab('qs')">❓ Por Pregunta</button>
+    </div>
+    <div class="an-panel active" id="dan-dist">
+      <div class="charts-2col">
+        <div class="glass chart-box"><div class="chart-title">Distribución de puntajes</div><canvas id="dch-dist" height="200"></canvas></div>
+        <div class="glass chart-box"><div class="chart-title">Niveles del grupo</div><canvas id="dch-levels" height="200"></canvas></div>
+      </div>
+      <div class="charts-2col">
+        <div class="glass chart-box"><div class="chart-title">Por empresa / área</div><canvas id="dch-local" height="200"></canvas></div>
+        <div class="glass chart-box"><div class="chart-title">Por rol</div><canvas id="dch-rol" height="200"></canvas></div>
+      </div>
+    </div>
+    <div class="an-panel" id="dan-mods">
+      <div class="glass chart-box" style="margin-bottom:16px"><div class="chart-title">Promedio por dimensión (%)</div><canvas id="dch-mods-avg" height="140"></canvas></div>
+      <div class="mods-grid" id="dash-mods-grid"></div>
+    </div>
+    <div class="an-panel" id="dan-qs">
+      <div class="qs-grid" id="dash-qs-grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ VIEW: ADMIN ═══ -->
+<div id="view-admin" class="view">
+  <div id="admin-login-wrap">
+    <div class="admin-login-wrap">
+      <div class="glass-strong admin-login">
+        <div class="lock-ico">🔐</div>
+        <div class="admin-title">Panel del Facilitador</div>
+        <div class="admin-sub">Ingresa la clave para ver los resultados del grupo</div>
+        <div class="frow" style="text-align:left">
+          <label>Contraseña</label>
+          <input type="password" id="pwd-in" placeholder="••••••••••" onkeydown="if(event.key==='Enter')checkAdmin()"/>
+        </div>
+        <button class="btn-start" onclick="checkAdmin()" style="margin-top:4px">Ingresar →</button>
+      </div>
+    </div>
+  </div>
+  <div id="admin-panel" style="display:none">
+    <div class="admin-outer">
+      <div class="admin-hdr">
+        <div class="admin-h1">🏆 Panel del Facilitador IA</div>
+        <div class="btn-row">
+          <button class="btn-refresh" onclick="loadAdmin()">🔄 Actualizar</button>
+          <button class="btn-export" onclick="exportExcel()">📥 Exportar Excel</button>
+          <button class="btn-export-sheets" onclick="shareDashboard()" style="background:linear-gradient(135deg,#7b2fff,#5a1fd1);box-shadow:0 4px 14px rgba(123,47,255,.3)">📤 Compartir Dashboard</button>
+          <button class="btn-del" onclick="clearAll()">🗑️ Limpiar</button>
+        </div>
+      </div>
+
+      <!-- INFO BANNER: auto-save -->
+      <div class="glass" style="padding:14px 20px;margin-bottom:18px;border:1px solid rgba(0,200,255,0.2);display:flex;align-items:center;gap:12px;">
+        <span style="font-size:1.4rem">☁️</span>
+        <p style="font-size:0.83rem;color:var(--t2);line-height:1.5;">
+          <strong style="color:var(--cyan)">Auto-guardado activo.</strong>
+          Cada respuesta enviada desde cualquier dispositivo (celular, tablet, PC, Teams) llega aquí automáticamente.
+          Pulsa <strong style="color:var(--t1)">Actualizar</strong> para ver las más recientes.
+        </p>
+      </div>
+
+      <div class="stats-grid" id="admin-stats"></div>
+
+      <!-- ── ANALYTICS TABS ── -->
+      <div class="analytics-wrap" id="analytics-wrap" style="display:none">
+        <div class="an-tabs">
+          <button class="an-tab active" onclick="switchTab('dist')">📊 Distribución</button>
+          <button class="an-tab" onclick="switchTab('mods')">📦 Por Dimensión</button>
+          <button class="an-tab" onclick="switchTab('qs')">❓ Por Pregunta</button>
+        </div>
+
+        <!-- TAB: Distribución -->
+        <div class="an-panel active" id="an-dist">
+          <div class="charts-2col">
+            <div class="glass chart-box">
+              <div class="chart-title">Distribución de puntajes</div>
+              <canvas id="ch-dist" height="200"></canvas>
+            </div>
+            <div class="glass chart-box">
+              <div class="chart-title">Niveles del grupo</div>
+              <canvas id="ch-levels" height="200"></canvas>
+            </div>
+          </div>
+          <div class="charts-2col">
+            <div class="glass chart-box">
+              <div class="chart-title">Por empresa / área</div>
+              <canvas id="ch-local" height="200"></canvas>
+            </div>
+            <div class="glass chart-box">
+              <div class="chart-title">Por rol</div>
+              <canvas id="ch-rol" height="200"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB: Por Dimensión -->
+        <div class="an-panel" id="an-mods">
+          <div class="glass chart-box" style="margin-bottom:16px">
+            <div class="chart-title">Promedio del grupo por dimensión (%)</div>
+            <canvas id="ch-mods-avg" height="140"></canvas>
+          </div>
+          <div class="mods-grid" id="mods-grid"></div>
+        </div>
+
+        <!-- TAB: Por Pregunta -->
+        <div class="an-panel" id="an-qs">
+          <div class="qs-grid" id="qs-grid"></div>
+        </div>
+      </div>
+
+      <!-- ── INFORME ICONE ── -->
+      <div class="glass" id="icone-section" style="border-radius:14px;padding:20px;margin-bottom:18px;border:1px solid rgba(212,168,71,.2);display:none">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+          <div>
+            <div style="font-size:1rem;font-weight:900;color:var(--gold)">📊 Informe Ejecutivo ICONE</div>
+            <div style="font-size:.75rem;color:var(--t3);margin-top:2px">Análisis narrativo del grupo — genera, refina y publica en el dashboard</div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button onclick="generateIconeReport()" style="background:rgba(212,168,71,.15);border:1px solid rgba(212,168,71,.4);color:var(--gold);border-radius:8px;padding:7px 14px;font-size:.8rem;font-weight:700;cursor:pointer;font-family:inherit">✨ Generar / Actualizar</button>
+            <button onclick="publishIconeReport()" id="btn-publish-icone" style="background:rgba(0,212,138,.1);border:1px solid rgba(0,212,138,.3);color:var(--green);border-radius:8px;padding:7px 14px;font-size:.8rem;font-weight:700;cursor:pointer;font-family:inherit;display:none">☁️ Publicar en Dashboard</button>
+          </div>
+        </div>
+        <div id="icone-preview" style="background:rgba(0,0,0,.2);border-radius:10px;padding:16px;font-size:.82rem;line-height:1.8;color:var(--t2);display:none;white-space:pre-wrap"></div>
+        <div id="icone-chat" style="margin-top:16px;display:none">
+          <div style="font-size:.72rem;color:var(--t3);margin-bottom:8px;font-weight:700;text-transform:uppercase;letter-spacing:.8px">💬 Refinar informe</div>
+          <div id="icone-chat-history" style="max-height:180px;overflow-y:auto;margin-bottom:8px"></div>
+          <div style="display:flex;gap:8px">
+            <input id="icone-chat-input" type="text" placeholder="Ej: Hazlo más conciso, enfócate en fortalezas, tono formal…" style="flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:9px 14px;color:var(--t1);font-size:.82rem;font-family:inherit" onkeydown="if(event.key==='Enter')sendIconeChat()"/>
+            <button onclick="sendIconeChat()" style="background:rgba(232,64,28,.15);border:1px solid rgba(232,64,28,.4);color:var(--coral);border-radius:8px;padding:9px 14px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:inherit">Enviar →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Acordeón maestro de participantes -->
+      <div class="glass" style="border-radius:14px;overflow:hidden;margin-bottom:24px;" id="participants-section" style="display:none">
+        <div class="acc-head" onclick="toggleParticipants()" style="border-radius:14px;">
+          <span class="acc-rank" style="font-size:1.1rem">👥</span>
+          <span class="acc-name" id="participants-title">Participantes</span>
+          <div class="acc-meta"></div>
+          <span></span>
+          <span class="acc-arrow" id="participants-arrow">▼</span>
+        </div>
+        <div class="acc-body" id="participants-body">
+          <div class="acc-wrap" id="admin-list" style="padding-top:4px"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /wrap -->
+
+<script>
+/* ══════════════════════════════════
+   STORAGE — GitHub Issues API (auto-save global)
+══════════════════════════════════ */
+const ADMIN_PWD = "Diagnosticos2026";
+const GH_REPO   = "jorgeicone/diagnostico-ia-experto";
+const GH_PART   = "ghp_6g1MgGH3VXcG"; // Part A — Part B fetched at runtime
+
+let _ghToken = null;
+async function getToken() {
+  if (_ghToken) return _ghToken;
+  try {
+    const cfg = await fetch(
+      `https://raw.githubusercontent.com/${GH_REPO}/main/config.json?t=${Date.now()}`
+    ).then(r => r.json());
+    _ghToken = GH_PART + cfg.k;
+    return _ghToken;
+  } catch(e) {
+    console.error("Token fetch failed", e);
+    return null;
+  }
+}
+
+/* Fallback local cache (if offline or API fails) */
+function _saveLocal(record) {
+  try {
+    const list = JSON.parse(localStorage.getItem("iaexp_v1") || "[]");
+    if (!list.find(r => r.id === record.id)) list.push(record);
+    localStorage.setItem("iaexp_v1", JSON.stringify(list));
+  } catch {}
+}
+function _getLocal() {
+  try { return JSON.parse(localStorage.getItem("iaexp_v1") || "[]"); } catch { return []; }
+}
+
+/* ── SAVE: POST a new GitHub Issue ── */
+async function saveToCloud(record) {
+  _saveLocal(record); // always save locally as fallback
+  try {
+    const token = await getToken();
+    if (!token) throw new Error("no token");
+    const res = await fetch(`https://api.github.com/repos/${GH_REPO}/issues`, {
+      method: "POST",
+      headers: {
+        Authorization: "token " + token,
+        "Content-Type": "application/json",
+        Accept: "application/vnd.github.v3+json"
+      },
+      body: JSON.stringify({
+        title: `d-${record.id}`,
+        body: JSON.stringify(record),
+        labels: ["diagnostic"]
+      })
+    });
+    if (!res.ok) { const t = await res.text(); throw new Error(t); }
+    return true;
+  } catch(e) {
+    console.error("saveToCloud failed:", e);
+    return false; // saved locally at least
+  }
+}
+
+/* ── LOAD: fetch all issues with label "diagnostic" ── */
+async function loadFromCloud() {
+  try {
+    const token = await getToken();
+    if (!token) throw new Error("no token");
+    let all = [], page = 1;
+    const TIMEOUT_MS = 8000;
+    const fetchWithTimeout = (url, opts) => {
+      const ctrl = new AbortController();
+      const timer = setTimeout(()=>ctrl.abort(), TIMEOUT_MS);
+      return fetch(url, {...opts, signal:ctrl.signal}).finally(()=>clearTimeout(timer));
+    };
+    while (true) {
+      const res = await fetchWithTimeout(
+        `https://api.github.com/repos/${GH_REPO}/issues?state=open&labels=diagnostic&per_page=100&page=${page}`,
+        { headers: { Authorization: "token " + token, Accept: "application/vnd.github.v3+json" } }
+      );
+      if (!res.ok) throw new Error(await res.text());
+      const issues = await res.json();
+      if (!issues.length) break;
+      issues.forEach(iss => { try { all.push(JSON.parse(iss.body)); } catch {} });
+      if (issues.length < 100) break;
+      page++;
+    }
+    return all;
+  } catch(e) {
+    console.error("loadFromCloud failed:", e);
+    return _getLocal(); // fallback
+  }
+}
+
+function encodeRecord(record) {
+  const compact = {
+    n: record.nombre, e: record.email,
+    t: record.tienda, r: record.rol,
+    s: record.score,  k: record.nivelKey,
+    m: record.modulos.map(m => m.score),
+    a: record.respuestas.join(""),
+    ts: record.timestamp, id: record.id
+  };
+  return btoa(unescape(encodeURIComponent(JSON.stringify(compact))));
+}
+
+function decodeRecord(encoded) {
+  try {
+    const c = JSON.parse(decodeURIComponent(escape(atob(encoded))));
+    const lvl = LVLS.find(l => l.key === c.k) || LVLS[0];
+    return {
+      id: c.id || Date.now().toString(36),
+      timestamp: c.ts || new Date().toISOString(),
+      nombre: c.n, email: c.e, tienda: c.t, rol: c.r,
+      score: c.s, nivel: lvl.name, nivelKey: c.k,
+      respuestas: c.a ? c.a.split("") : [],
+      modulos: MODS.map((m, i) => ({ id: m.id, name: m.name, score: (c.m||[])[i]||0, max: m.max }))
+    };
+  } catch { return null; }
+}
+
+function getShareURL(record) {
+  return location.origin + location.pathname + "?r=" + encodeRecord(record);
+}
+
+/* ══════════════════════════════════
+   QUESTIONS
+══════════════════════════════════ */
+const QS = [
+  // ── 1) FUNDACIONAL ──
+  {m:1,mn:"Fundacional",t:"¿Qué tan claro tienes qué es la inteligencia artificial generativa (como ChatGPT, Gemini o Claude)?",o:["He oído de ellas, pero no sé bien qué son ni cómo funcionan","Entiendo que generan texto o imágenes a partir de instrucciones, aunque no del todo cómo","Comprendo que predicen lenguaje a partir de patrones y sé qué tareas hacen bien y cuáles no"]},
+  {m:1,mn:"Fundacional",t:"¿Sabes diferenciar lo que la IA hace bien de lo que NO debería hacer sola?",o:["No tengo claro dónde están sus límites","Intuyo algunos límites, pero me sorprende cuando se equivoca","Conozco sus fortalezas y limitaciones, y ajusto mis expectativas según la tarea"]},
+  {m:1,mn:"Fundacional",t:"¿Con qué frecuencia usas alguna herramienta de IA en tu día a día?",o:["Casi nunca — es de las primeras veces que me acerco","De vez en cuando, para cosas puntuales","A diario — ya es parte de mi forma de trabajar"]},
+  {m:1,mn:"Fundacional",t:"Cuando escuchas términos como “modelo”, “prompt”, “token” o “alucinación”, ¿qué tan cómodo te sientes?",o:["Son palabras nuevas para mí","Reconozco algunas, pero no las uso con seguridad","Las entiendo y las uso con naturalidad"]},
+  {m:1,mn:"Fundacional",t:"¿Qué tan claro tienes para qué tipo de tareas conviene usar IA?",o:["Aún no sé en qué me puede ayudar realmente","Tengo algunas ideas, pero pruebo a tientas","Identifico con claridad qué tareas delegar a la IA y cuáles no"]},
+  // ── 2) APLICATIVO ──
+  {m:2,mn:"Aplicativo",t:"¿Qué tan bien sabes redactar una instrucción (prompt) para obtener un buen resultado?",o:["Escribo lo primero que se me ocurre y espero a ver qué sale","Doy algo de contexto, pero mis resultados son irregulares","Estructuro la instrucción con contexto, rol, formato y ejemplos para lograr resultados consistentes"]},
+  {m:2,mn:"Aplicativo",t:"Cuando la IA te da una respuesta que no era lo que querías, ¿qué haces?",o:["Me frustro y lo abandono o lo hago manualmente","Vuelvo a intentar cambiando algunas palabras","Ajusto la instrucción con precisión (más contexto, ejemplos, restricciones) hasta lograrlo"]},
+  {m:2,mn:"Aplicativo",t:"¿Has usado IA para resolver una tarea real de tu trabajo o estudio?",o:["Todavía no lo he intentado","Sí, para tareas simples como redactar o resumir","Sí, con regularidad para tareas complejas que me ahorran tiempo real"]},
+  {m:2,mn:"Aplicativo",t:"¿Qué tan cómodo te sientes pidiéndole a la IA un formato específico (tabla, lista, correo, guion)?",o:["No sabía que se le podía pedir un formato","Lo intento, pero no siempre obtengo lo que necesito","Lo hago con facilidad y obtengo justo el formato que necesito"]},
+  {m:2,mn:"Aplicativo",t:"¿Qué tan capaz te sientes de dividir una tarea grande en pasos que la IA pueda ayudarte a resolver?",o:["No sé por dónde empezar","Lo hago a veces, de forma intuitiva","Descompongo tareas complejas y guío a la IA paso a paso con claridad"]},
+  // ── 3) INTERACTIVO ──
+  {m:3,mn:"Interactivo",t:"¿Qué tanto aprovechas la conversación (ir y venir) con la IA, en lugar de una sola pregunta?",o:["Hago una pregunta y me quedo con la primera respuesta","A veces repregunto si no me convence","Trabajo en diálogo: refino, corrijo y construyo sobre las respuestas anteriores"]},
+  {m:3,mn:"Interactivo",t:"¿Le das contexto a la IA sobre quién eres, para quién es el resultado o qué objetivo buscas?",o:["No, solo escribo la pregunta directa","A veces doy algo de contexto","Siempre encuadro el contexto, la audiencia y el objetivo antes de pedir"]},
+  {m:3,mn:"Interactivo",t:"Cuando la IA se equivoca o asume algo incorrecto, ¿cómo reaccionas?",o:["Asumo que la herramienta no sirve","Lo corrijo señalando el error puntual","La reencauzo con feedback claro y la hago razonar de nuevo sobre lo correcto"]},
+  {m:3,mn:"Interactivo",t:"¿Qué tan cómodo te sientes pidiéndole a la IA que explique su razonamiento o que te haga preguntas a ti?",o:["No se me había ocurrido pedirle eso","Lo he intentado alguna vez","Lo uso a propósito para mejorar la calidad y entender mejor el resultado"]},
+  {m:3,mn:"Interactivo",t:"¿Usas la IA como compañera de pensamiento (lluvia de ideas, debatir, explorar opciones)?",o:["La veo solo como un buscador de respuestas","A veces le pido ideas","La uso como socia de pensamiento para explorar, contrastar y decidir mejor"]},
+  // ── 4) ESTRATÉGICO ──
+  {m:4,mn:"Estratégico",t:"¿Has pensado cómo la IA podría transformar tu trabajo o tu área, no solo tareas sueltas?",o:["No lo he pensado todavía","Tengo ideas vagas de que “podría ayudar”","Tengo una visión clara de cómo rediseñar procesos con IA"]},
+  {m:4,mn:"Estratégico",t:"¿Identificas oportunidades donde la IA podría ahorrar tiempo o mejorar resultados en tu entorno?",o:["No sabría dónde aplicarla","Veo una o dos oportunidades obvias","Detecto múltiples oportunidades y priorizo las de mayor impacto"]},
+  {m:4,mn:"Estratégico",t:"¿Has combinado varias herramientas o pasos de IA para lograr un resultado más grande?",o:["No, uso una herramienta para una cosa a la vez","He encadenado un par de pasos manualmente","Diseño flujos donde la IA se integra con otras herramientas y procesos"]},
+  {m:4,mn:"Estratégico",t:"Cuando piensas en adoptar IA, ¿consideras el retorno (tiempo, costo, calidad) frente al esfuerzo?",o:["No lo evalúo, solo pruebo","Lo considero de forma intuitiva","Evalúo costo-beneficio y decido con criterio dónde invertir el esfuerzo"]},
+  {m:4,mn:"Estratégico",t:"¿Qué tan preparado te sientes para enseñar o impulsar el uso de IA en tu equipo o entorno?",o:["Aún soy yo quien necesita aprender","Podría compartir lo básico que sé","Me siento capaz de liderar la adopción de IA en mi entorno"]},
+  // ── 5) ÉTICA Y CRITERIO ──
+  {m:5,mn:"Ética y Criterio",t:"¿Verificas la información que te da la IA antes de usarla en algo importante?",o:["Asumo que lo que dice es correcto","A veces la reviso si algo me parece raro","Siempre contrasto los datos clave antes de confiar en ellos"]},
+  {m:5,mn:"Ética y Criterio",t:"¿Sabes que la IA puede “alucinar” (inventar datos que suenan ciertos)?",o:["No sabía que eso pasaba","Lo he notado alguna vez","Lo tengo presente y diseño mi uso para detectarlo y mitigarlo"]},
+  {m:5,mn:"Ética y Criterio",t:"¿Tienes cuidado con la información sensible o confidencial que escribes en una IA?",o:["No me había puesto a pensar en eso","Evito algunos datos, pero sin un criterio claro","Tengo reglas claras sobre qué información nunca comparto con una IA"]},
+  {m:5,mn:"Ética y Criterio",t:"¿Reconoces cuándo una respuesta de IA podría tener sesgos o estar incompleta?",o:["Tomo las respuestas tal cual","A veces percibo que falta algo","Evalúo de forma crítica los sesgos, vacíos y puntos de vista faltantes"]},
+  {m:5,mn:"Ética y Criterio",t:"¿Qué tan claro tienes cuándo es apropiado usar IA, declararlo o cuándo NO conviene usarla?",o:["No me he planteado esa pregunta","Tengo dudas sobre cuándo es apropiado","Tengo criterio claro sobre el uso ético, transparente y responsable de la IA"]}
+];
+
+const MODS = [
+  {id:1,name:"Fundacional",max:20},
+  {id:2,name:"Aplicativo",max:20},
+  {id:3,name:"Interactivo",max:20},
+  {id:4,name:"Estratégico",max:20},
+  {id:5,name:"Ética y Criterio",max:20}
+];
+
+const LVLS = [
+  {key:"p",name:"Curioso/a IA",badge:"🌱 Curioso/a IA",cssClass:"lv-p",pillClass:"pill-p",emoji:"🌱",min:0,max:33,
+   msg:"¡Bienvenido/a a un camino apasionante! Estás dando el primer paso y eso ya tiene mucho valor. Este curso fue diseñado justo para alguien con tu curiosidad: vas a pasar de la duda a la confianza y descubrirás todo lo que la IA puede hacer por ti. De cero a experto, empieza aquí."},
+  {key:"f",name:"Explorador/a IA",badge:"🧭 Explorador/a IA",cssClass:"lv-f",pillClass:"pill-f",emoji:"🧭",min:34,max:66,
+   msg:"¡Vas por muy buen camino! Ya entiendes lo básico y has empezado a aplicar la IA. Este curso te dará método y profundidad para usarla con seguridad, criterio y resultados consistentes en tu día a día."},
+  {key:"e",name:"Experto/a IA",badge:"🏆 Experto/a IA",cssClass:"lv-e",pillClass:"pill-e",emoji:"🏆",min:67,max:100,
+   msg:"¡Impresionante punto de partida! Tienes una base sólida y un uso maduro de la IA. En este curso afilarás tu estrategia, tu criterio y tu capacidad de crear soluciones de alto impacto — y serás un referente para los demás."}
+];
+
+/* ══════════════════════════════════
+   STATE
+══════════════════════════════════ */
+let S = {
+  participant: {},
+  currentQ: 0,
+  answers: new Array(QS.length).fill(null),
+  chart: null
+};
+
+/* ══════════════════════════════════
+   ROUTING
+══════════════════════════════════ */
+function showView(id) {
+  document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+  document.getElementById("view-" + id).classList.add("active");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+/* ══════════════════════════════════
+   INTRO
+══════════════════════════════════ */
+function startQuiz() {
+  const nombre = document.getElementById("i-nombre").value.trim();
+  const email = document.getElementById("i-email").value.trim();
+  if (!nombre) return toast("Por favor escribe tu nombre completo");
+  if (!email || !email.includes("@")) return toast("Por favor escribe un correo válido");
+  S.participant = {
+    nombre, email,
+    tienda: document.getElementById("i-tienda").value.trim(),
+    rol: document.getElementById("i-rol").value
+  };
+  S.currentQ = 0;
+  S.answers = new Array(QS.length).fill(null);
+  showView("quiz");
+  renderQ();
+}
+
+/* ══════════════════════════════════
+   QUIZ
+══════════════════════════════════ */
+function renderQ() {
+  const q = QS[S.currentQ];
+  const i = S.currentQ;
+  const n = QS.length;
+  document.getElementById("q-mod").textContent = `Dimensión ${q.m}: ${q.mn}`;
+  document.getElementById("q-cnt").textContent = `${i+1} / ${n}`;
+  document.getElementById("prog-fill").style.width = `${((i+1)/n)*100}%`;
+  document.getElementById("q-num").textContent = `Pregunta ${i+1}`;
+  document.getElementById("q-text").textContent = q.t;
+
+  const container = document.getElementById("opts");
+  container.innerHTML = "";
+  ["A","B","C"].forEach((ltr, j) => {
+    const btn = document.createElement("button");
+    btn.className = "opt" + (S.answers[i] === j ? " sel" : "");
+    btn.innerHTML = `<span class="opt-letter">${ltr}</span><span class="opt-text">${q.o[j]}</span>`;
+    btn.onclick = () => selectOpt(j);
+    container.appendChild(btn);
+  });
+
+  document.getElementById("btn-prev").style.display = i === 0 ? "none" : "";
+  updateNextBtn();
+
+  const card = document.getElementById("q-card");
+  card.style.animation = "none";
+  void card.offsetWidth;
+  card.style.animation = "fadeUp .35s ease";
+}
+
+function selectOpt(j) {
+  S.answers[S.currentQ] = j;
+  document.querySelectorAll(".opt").forEach((b, k) => b.classList.toggle("sel", k === j));
+  updateNextBtn();
+}
+
+function updateNextBtn() {
+  const btn = document.getElementById("btn-next");
+  const last = S.currentQ === QS.length - 1;
+  btn.disabled = S.answers[S.currentQ] === null;
+  btn.textContent = last ? "Ver mi resultado ✨" : "Siguiente →";
+}
+
+function nextQ() {
+  if (S.answers[S.currentQ] === null) return;
+  if (S.currentQ < QS.length - 1) { S.currentQ++; renderQ(); }
+  else finish();
+}
+
+function prevQ() {
+  if (S.currentQ > 0) { S.currentQ--; renderQ(); }
+}
+
+/* ══════════════════════════════════
+   SCORING
+══════════════════════════════════ */
+function compute() {
+  const pts = [0,2,4];
+  const total = S.answers.reduce((s,a) => s + (a!==null ? pts[a] : 0), 0);
+  const modScores = {};
+  MODS.forEach(m => { modScores[m.id] = 0; });
+  QS.forEach((q,i) => { if (S.answers[i]!==null) modScores[q.m] += pts[S.answers[i]]; });
+  return { total, modScores };
+}
+
+function getLevel(score) {
+  return LVLS.find(l => score >= l.min && score <= l.max) || LVLS[0];
+}
+
+/* ══════════════════════════════════
+   FINISH & RESULT
+══════════════════════════════════ */
+async function finish() {
+  const { total, modScores } = compute();
+  const lvl = getLevel(total);
+  const p = S.participant;
+
+  const record = {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2),
+    timestamp: new Date().toISOString(),
+    nombre: p.nombre,
+    email: p.email,
+    tienda: p.tienda,
+    rol: p.rol,
+    score: total,
+    nivel: lvl.name,
+    nivelKey: lvl.key,
+    respuestas: S.answers.map(a => ["A","B","C"][a] || ""),
+    modulos: MODS.map(m => ({ id: m.id, name: m.name, score: modScores[m.id], max: m.max }))
+  };
+
+  S.lastRecord = record; // keep for sharing
+
+  // Show saving overlay
+  document.getElementById("saving-overlay").classList.add("show");
+  const saved = await saveToCloud(record);
+  document.getElementById("saving-overlay").classList.remove("show");
+  if (saved) toast("☁️ ¡Resultado guardado en la nube!");
+  else toast("⚠️ Guardado local — se sincronizará al reconectar");
+
+  // Render result
+  renderResult(total, lvl, modScores, p.nombre);
+}
+
+function renderResult(total, lvl, modScores, nombre) {
+  const hero = document.getElementById("res-hero");
+  hero.className = "glass-strong res-hero " + lvl.cssClass;
+
+  document.getElementById("res-badge").textContent = lvl.badge;
+  document.getElementById("res-circle").className = "score-circle"; // reset
+  requestAnimationFrame(() => {
+    document.getElementById("res-circle").className = "score-circle " + (lvl.cssClass || "");
+  });
+
+  // Animated counter
+  let count = 0;
+  const scoreEl = document.getElementById("res-score");
+  const tick = setInterval(() => {
+    count = Math.min(count + Math.ceil(total / 30), total);
+    scoreEl.textContent = count;
+    if (count >= total) clearInterval(tick);
+  }, 40);
+
+  document.getElementById("res-name").textContent = nombre.split(" ")[0] + ",";
+  document.getElementById("res-level").textContent = lvl.name;
+  document.getElementById("res-msg").textContent = lvl.msg;
+
+  // Module bars
+  const barsList = document.getElementById("bars-list");
+  barsList.innerHTML = "";
+  MODS.forEach(m => {
+    const pct = Math.round((modScores[m.id] / m.max) * 100);
+    const row = document.createElement("div");
+    row.className = "bar-row";
+    row.innerHTML = `
+      <span class="bar-lbl">${m.name}</span>
+      <div class="bar-track"><div class="bar-fill" style="width:0%" data-pct="${pct}"></div></div>
+      <span class="bar-pct">${pct}%</span>`;
+    barsList.appendChild(row);
+  });
+
+  showView("result");
+
+  // Animate bars
+  setTimeout(() => {
+    document.querySelectorAll(".bar-fill").forEach(el => {
+      el.style.width = el.dataset.pct + "%";
+    });
+  }, 300);
+
+  // Radar chart
+  if (S.chart) { S.chart.destroy(); S.chart = null; }
+  const ctx = document.getElementById("radar").getContext("2d");
+  S.chart = new Chart(ctx, {
+    type: "radar",
+    data: {
+      labels: MODS.map(m => m.name),
+      datasets: [{
+        label: "Tu perfil IA",
+        data: MODS.map(m => Math.round((modScores[m.id] / m.max) * 100)),
+        backgroundColor: "rgba(232,64,28,0.1)",
+        borderColor: "rgba(232,64,28,0.8)",
+        borderWidth: 2,
+        pointBackgroundColor: "#D4A847",
+        pointBorderColor: "#08101f",
+        pointBorderWidth: 2,
+        pointRadius: 5
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        r: {
+          min: 0, max: 100,
+          ticks: { stepSize: 25, font: { size: 9 }, color: "rgba(255,255,255,0.35)", backdropColor: "transparent" },
+          pointLabels: { font: { size: 10, weight: "700" }, color: "rgba(255,255,255,0.7)" },
+          grid: { color: "rgba(255,255,255,0.07)" },
+          angleLines: { color: "rgba(255,255,255,0.07)" }
+        }
+      },
+      plugins: { legend: { display: false } }
+    }
+  });
+
+  // Confetti for experts
+  if (total >= 67) confetti();
+}
+
+function restartQuiz() {
+  S.currentQ = 0;
+  S.answers = new Array(QS.length).fill(null);
+  showView("intro");
+  ["i-nombre","i-email","i-tienda"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("i-rol").value = "";
+}
+
+function shareResult() {
+  if (!S.lastRecord) return;
+  const url = getShareURL(S.lastRecord);
+  navigator.clipboard.writeText(url).then(() => {
+    toast("✅ ¡Enlace copiado! Pégalo en Teams con #MiDiagnóstico");
+    document.getElementById("btn-share").textContent = "✅ Enlace copiado";
+    setTimeout(() => document.getElementById("btn-share").textContent = "📤 Compartir en Teams", 3000);
+  }).catch(() => {
+    // Fallback: show in prompt
+    window.prompt("Copia este enlace y pégalo en Teams con #MiDiagnóstico:", url);
+  });
+}
+
+
+/* ══════════════════════════════════
+   ADMIN
+══════════════════════════════════ */
+function checkAdmin() {
+  const pwd = document.getElementById("pwd-in").value;
+  if (pwd === ADMIN_PWD) {
+    document.getElementById("admin-login-wrap").style.display = "none";
+    document.getElementById("admin-panel").style.display = "block";
+    loadAdmin();
+    getToken(); // pre-calentar token para siguiente Actualizar
+  } else {
+    toast("Contraseña incorrecta");
+    document.getElementById("pwd-in").value = "";
+  }
+}
+
+async function loadAdmin() {
+  const btn = document.querySelector(".btn-refresh");
+
+  // 1. Mostrar caché local al instante (sin esperar la red)
+  const cached = _getLocal();
+  if (cached.length) {
+    renderAdmin(cached);
+    toast("📦 " + cached.length + " local — sincronizando con nube...");
+  } else {
+    document.getElementById("admin-list").innerHTML =
+      `<div class="empty"><div class="empty-ico">☁️</div><p>Conectando con la nube…</p></div>`;
+  }
+
+  // 2. Traer datos frescos de GitHub en segundo plano
+  if (btn) { btn.disabled = true; btn.textContent = "⏳ Sincronizando..."; }
+  try {
+    const records = await loadFromCloud();
+    // Actualizar caché local con los datos frescos
+    try { localStorage.setItem("iaexp_v1", JSON.stringify(records)); } catch {}
+    renderAdmin(records);
+  } catch(e) {
+    toast("⚠️ Sin conexión — mostrando datos locales");
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = "🔄 Actualizar"; }
+  }
+}
+
+/* ══════════════════════════════════
+   ANALYTICS
+══════════════════════════════════ */
+let _ci = {}; // chart instances
+
+function destroyCharts() {
+  Object.values(_ci).forEach(c => { try { c.destroy(); } catch {} });
+  _ci = {};
+}
+
+// Register datalabels plugin globally
+if (typeof ChartDataLabels !== 'undefined') Chart.register(ChartDataLabels);
+
+const CHART_SCALE = {
+  x: { ticks:{color:'rgba(255,255,255,.55)',font:{size:10}}, grid:{color:'rgba(255,255,255,.07)'} },
+  y: { ticks:{color:'rgba(255,255,255,.55)',font:{size:10}}, grid:{color:'rgba(255,255,255,.07)'} }
+};
+
+function switchTab(tab) {
+  const tabs = ['dist','mods','qs'];
+  document.querySelectorAll('#analytics-wrap .an-tab').forEach((btn,i) => btn.classList.toggle('active', tabs[i] === tab));
+  document.querySelectorAll('#analytics-wrap .an-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('an-' + tab).classList.add('active');
+}
+
+function renderAnalytics(records) {
+  destroyCharts();
+  const wrap = document.getElementById('analytics-wrap');
+  if (!records.length) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+
+  const DL_OFF = { datalabels:{ display:false } }; // shorthand to disable plugin per chart
+
+  /* 1 ─ Score distribution histogram con % del total */
+  const bins = ['0–20','21–40','41–60','61–80','81–100'];
+  const binCounts = [0,0,0,0,0];
+  records.forEach(r => { binCounts[Math.min(4, Math.floor(r.score/20))]++; });
+  const binPcts = binCounts.map(v => records.length ? Math.round(v/records.length*100) : 0);
+  _ci.dist = new Chart(document.getElementById('ch-dist'), {
+    type:'bar',
+    data:{
+      labels:bins,
+      datasets:[{
+        label:'%', data:binPcts, borderRadius:6, borderSkipped:false,
+        backgroundColor:['rgba(255,140,0,.7)','rgba(255,200,60,.7)','rgba(100,190,255,.7)','rgba(0,200,120,.75)','rgba(0,212,138,.9)']
+      }]
+    },
+    options:{
+      plugins:{
+        legend:{display:false},
+        datalabels:{color:'#fff',font:{weight:'bold',size:12},anchor:'end',align:'top',
+          formatter:v=>v>0?v+'%':''}
+      },
+      scales:{
+        x:CHART_SCALE.x,
+        y:{...CHART_SCALE.y,min:0,max:100,
+          ticks:{...CHART_SCALE.y.ticks,callback:v=>v+'%'}}
+      }
+    }
+  });
+
+  /* 2 ─ Levels donut con % */
+  const lc = {p:0,f:0,e:0};
+  records.forEach(r => { if(lc[r.nivelKey]!==undefined) lc[r.nivelKey]++; });
+  _ci.levels = new Chart(document.getElementById('ch-levels'), {
+    type:'doughnut',
+    data:{
+      labels:['🌱 Principiante','⭐ En Formación','🏆 Experto'],
+      datasets:[{data:[lc.p,lc.f,lc.e], backgroundColor:['rgba(255,179,71,.85)','rgba(102,204,255,.85)','rgba(0,212,138,.85)'], borderWidth:0, hoverOffset:8}]
+    },
+    options:{
+      plugins:{
+        legend:{position:'bottom',labels:{color:'rgba(255,255,255,.65)',font:{size:10},boxWidth:10,padding:10}},
+        datalabels:{color:'#fff',font:{weight:'bold',size:12},
+          formatter:(v,ctx)=>{ const t=ctx.dataset.data.reduce((a,b)=>a+b,0); return t?Math.round(v/t*100)+'%':''; }}
+      }
+    }
+  });
+
+  /* 3 ─ Local / área distribution */
+  const localMap = {};
+  records.forEach(r => { const k = (r.tienda||'Sin especificar').trim()||'Sin especificar'; localMap[k]=(localMap[k]||0)+1; });
+  const localLabels = Object.keys(localMap).sort((a,b)=>localMap[b]-localMap[a]).slice(0,12);
+  const localData = localLabels.map(l=>localMap[l]);
+  const localPcts = localData.map(v=>records.length?Math.round(v/records.length*100):0);
+  _ci.local = new Chart(document.getElementById('ch-local'), {
+    type:'bar',
+    data:{
+      labels:localLabels,
+      datasets:[{label:'%',data:localPcts,borderRadius:5,borderSkipped:false,
+        backgroundColor:'rgba(0,200,255,.65)'}]
+    },
+    options:{
+      indexAxis:'y',
+      plugins:{
+        legend:{display:false},
+        datalabels:{color:'#fff',font:{weight:'bold',size:11},anchor:'end',align:'right',
+          formatter:v=>v+'%'}
+      },
+      scales:{
+        x:{...CHART_SCALE.x,min:0,max:100,ticks:{...CHART_SCALE.x.ticks,callback:v=>v+'%'}},
+        y:{...CHART_SCALE.y,ticks:{color:'rgba(255,255,255,.7)',font:{size:9}}}
+      }
+    }
+  });
+
+  /* 4 ─ Rol distribution */
+  const rolMap = {};
+  records.forEach(r => { const k = (r.rol||'Sin especificar').trim()||'Sin especificar'; rolMap[k]=(rolMap[k]||0)+1; });
+  const rolLabels = Object.keys(rolMap).sort((a,b)=>rolMap[b]-rolMap[a]);
+  const rolColors = ['rgba(232,64,28,.8)','rgba(212,168,71,.8)','rgba(0,200,255,.8)','rgba(0,212,138,.8)','rgba(123,47,255,.8)','rgba(255,140,0,.8)'];
+  _ci.rol = new Chart(document.getElementById('ch-rol'), {
+    type:'doughnut',
+    data:{
+      labels:rolLabels,
+      datasets:[{data:rolLabels.map(k=>rolMap[k]),backgroundColor:rolColors,borderWidth:0,hoverOffset:6}]
+    },
+    options:{
+      plugins:{
+        legend:{position:'bottom',labels:{color:'rgba(255,255,255,.65)',font:{size:9},boxWidth:10,padding:8}},
+        datalabels:{color:'#fff',font:{weight:'bold',size:11},
+          formatter:(v,ctx)=>{ const t=ctx.dataset.data.reduce((a,b)=>a+b,0); return t?Math.round(v/t*100)+'%':''; }}
+      }
+    }
+  });
+
+  /* 5 ─ Module avg bar con % labels */
+  const modSums = Array(5).fill(0);
+  const modMaxes = Array(5).fill(0);
+  records.forEach(r => {
+    if (!r.modulos) return;
+    r.modulos.forEach((m,i) => { modSums[i] += m.score; modMaxes[i] = m.max; });
+  });
+  const modAvgPct = modSums.map((s,i) => modMaxes[i]>0 ? Math.round(s/records.length/modMaxes[i]*100) : 0);
+
+  _ci.modsAvg = new Chart(document.getElementById('ch-mods-avg'), {
+    type:'bar',
+    data:{
+      labels:['D1','D2','D3','D4','D5'],
+      datasets:[{
+        label:'% promedio', data:modAvgPct, borderRadius:6, borderSkipped:false,
+        backgroundColor:modAvgPct.map(v => v>=67?'rgba(0,212,138,.75)':v>=34?'rgba(100,190,255,.75)':'rgba(255,140,0,.75)')
+      }]
+    },
+    options:{
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:ctx=>`${ctx.parsed.y}%`}},
+        datalabels:{color:'#fff',font:{weight:'bold',size:11},anchor:'end',align:'top',
+          formatter:v=>v+'%'}
+      },
+      scales:{x:CHART_SCALE.x, y:{...CHART_SCALE.y,min:0,max:100,ticks:{...CHART_SCALE.y.ticks,callback:v=>v+'%'}}}
+    }
+  });
+
+  /* 6 ─ Per-module donuts más grandes con % */
+  const modNames = ['D1 — Fundacional','D2 — Aplicativo','D3 — Interactivo','D4 — Estratégico','D5 — Ética y Criterio'];
+  const modsGrid = document.getElementById('mods-grid');
+  modsGrid.innerHTML = modNames.map((nm,mi) => `
+    <div class="glass mod-chart-box">
+      <div class="mod-chart-name">${nm}</div>
+      <div style="position:relative;height:170px"><canvas id="ch-mod-${mi}"></canvas></div>
+    </div>`).join('');
+
+  modNames.forEach((_,mi) => {
+    const mc = {p:0,f:0,e:0};
+    records.forEach(r => {
+      if (!r.modulos || !r.modulos[mi]) return;
+      const pct = r.modulos[mi].max>0 ? r.modulos[mi].score/r.modulos[mi].max*100 : 0;
+      if(pct<34) mc.p++; else if(pct<67) mc.f++; else mc.e++;
+    });
+    _ci[`mod${mi}`] = new Chart(document.getElementById(`ch-mod-${mi}`), {
+      type:'doughnut',
+      data:{
+        labels:['Principiante','En Formación','Experto'],
+        datasets:[{data:[mc.p,mc.f,mc.e], backgroundColor:['rgba(255,179,71,.85)','rgba(102,204,255,.85)','rgba(0,212,138,.85)'], borderWidth:0}]
+      },
+      options:{
+        plugins:{
+          legend:{position:'bottom',labels:{color:'rgba(255,255,255,.6)',font:{size:9},boxWidth:8,padding:6}},
+          datalabels:{color:'#fff',font:{weight:'bold',size:12},
+            formatter:(v,ctx)=>{ const t=ctx.dataset.data.reduce((a,b)=>a+b,0); return t&&v>0?Math.round(v/t*100)+'%':''; }}
+        }
+      }
+    });
+  });
+
+  /* 5 ─ Per-question A/B/C bars (CSS, no Chart.js) */
+  const qCounts = Array.from({length:25}, ()=>({A:0,B:0,C:0,t:0}));
+  records.forEach(r => {
+    if (!r.respuestas) return;
+    r.respuestas.forEach((ans,qi) => { if(qi<25){qCounts[qi][ans]=(qCounts[qi][ans]||0)+1; qCounts[qi].t++;} });
+  });
+
+  document.getElementById('qs-grid').innerHTML = qCounts.map((qc,qi) => {
+    const pA = qc.t ? Math.round(qc.A/qc.t*100) : 0;
+    const pB = qc.t ? Math.round(qc.B/qc.t*100) : 0;
+    const pC = qc.t ? Math.round(qc.C/qc.t*100) : 0;
+    const txt = QS[qi] ? QS[qi].t.slice(0,65)+(QS[qi].t.length>65?'…':'') : '';
+    return `<div class="glass q-chart-box">
+      <div class="q-chart-title"><span style="color:var(--coral);font-weight:900">P${qi+1}</span> ${txt}</div>
+      <div class="ans-bar-row"><span class="ans-lbl ans-lbl-a">A</span><div class="ans-track"><div class="ans-fill ans-fill-a" style="width:${pA}%"></div></div><span class="ans-pct">${pA}%</span></div>
+      <div class="ans-bar-row"><span class="ans-lbl ans-lbl-b">B</span><div class="ans-track"><div class="ans-fill ans-fill-b" style="width:${pB}%"></div></div><span class="ans-pct">${pB}%</span></div>
+      <div class="ans-bar-row"><span class="ans-lbl ans-lbl-c">C</span><div class="ans-track"><div class="ans-fill ans-fill-c" style="width:${pC}%"></div></div><span class="ans-pct">${pC}%</span></div>
+      <div style="font-size:.65rem;color:var(--t3);margin-top:4px">${qc.t} respuesta${qc.t!==1?'s':''}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderAdmin(records) {
+  // Stats
+  const stats = document.getElementById("admin-stats");
+  if (!records.length) {
+    stats.innerHTML = "";
+    document.getElementById("admin-tbody").innerHTML = `<tr><td colspan="16"><div class="empty"><div class="empty-ico">📋</div><p>Aún no hay respuestas registradas</p></div></td></tr>`;
+    return;
+  }
+  const avg = Math.round(records.reduce((s,r) => s + r.score, 0) / records.length);
+  const cnt = {p:0,f:0,e:0};
+  records.forEach(r => { if(cnt[r.nivelKey]!==undefined) cnt[r.nivelKey]++; });
+  const pct = k => records.length ? Math.round(cnt[k]/records.length*100) : 0;
+
+  stats.innerHTML = `
+    <div class="glass stat"><div class="stat-lbl">Total</div><div class="stat-val">${records.length}</div><div class="stat-sub">participantes</div></div>
+    <div class="glass stat"><div class="stat-lbl">Promedio</div><div class="stat-val" style="background:linear-gradient(135deg,#E8401C,#D4A847);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">${avg}</div><div class="stat-sub">puntos del grupo</div></div>
+    <div class="glass stat"><div class="stat-lbl">🌱 Principiante</div><div class="stat-val" style="color:#ffb347">${cnt.p}</div><div class="stat-sub">${pct("p")}% del grupo</div></div>
+    <div class="glass stat"><div class="stat-lbl">⭐ En Formación</div><div class="stat-val" style="color:#66ccff">${cnt.f}</div><div class="stat-sub">${pct("f")}% del grupo</div></div>
+    <div class="glass stat"><div class="stat-lbl">🏆 Experto</div><div class="stat-val" style="color:#00d48a">${cnt.e}</div><div class="stat-sub">${pct("e")}% del grupo</div></div>
+  `;
+
+  const lvlMeta = {p:{cls:"pill-p",lbl:"Principiante"},f:{cls:"pill-f",lbl:"En Formación"},e:{cls:"pill-e",lbl:"Experto"}};
+  const modShort = ['CX Fund.','Journey','Peak-End','Innovación','Fideliz.','Liderazgo','CX Digital','Métricas'];
+
+  // Store records globally for modal access
+  window._adminRecords = records;
+
+  // Mostrar / actualizar acordeón maestro
+  const pSection = document.getElementById('participants-section');
+  pSection.style.display = records.length ? 'block' : 'none';
+  document.getElementById('participants-title').textContent =
+    `Ver participantes (${records.length})`;
+
+  document.getElementById("admin-list").innerHTML = records.map((r, i) => {
+    const lm = lvlMeta[r.nivelKey] || lvlMeta.p;
+    const date = new Date(r.timestamp).toLocaleDateString("es-CO", {day:"2-digit",month:"short"});
+    const modChips = r.modulos ? r.modulos.map((m,mi) => {
+      const pct = m.max>0?Math.round(m.score/m.max*100):0;
+      const col = pct>=67?'#00d48a':pct>=34?'#66ccff':'#ffb347';
+      return `<span class="acc-mod-chip" style="border-color:${col}33"><span style="color:var(--t3);font-size:.65rem">${modShort[mi]}</span> <strong style="color:${col}">${pct}%</strong></span>`;
+    }).join('') : '<span style="color:var(--t3);font-size:.8rem">Sin dimensiones</span>';
+
+    return `<div class="acc-item glass" id="acc-${i}">
+      <div class="acc-head" onclick="toggleAcc(${i})">
+        <span class="acc-rank">${i+1}</span>
+        <span class="acc-name">${r.nombre}</span>
+        <div class="acc-meta">
+          <div class="mini-bar"><div class="mini-track"><div class="mini-fill" style="width:${r.score}%"></div></div><strong style="color:var(--gold);font-size:.85rem">${r.score}</strong></div>
+          <span class="pill ${lm.cls}">${lm.lbl}</span>
+        </div>
+        <span class="acc-date">${date}</span>
+        <span class="acc-arrow" id="arr-${i}">▼</span>
+      </div>
+      <div class="acc-body" id="body-${i}">
+        <div class="acc-detail-grid">
+          <div class="acc-field"><div class="acc-field-lbl">Email</div><div class="acc-field-val" style="font-size:.75rem;color:var(--t2)">${r.email}</div></div>
+          <div class="acc-field"><div class="acc-field-lbl">Local / Área</div><div class="acc-field-val">${r.tienda||'—'}</div></div>
+          <div class="acc-field"><div class="acc-field-lbl">Rol</div><div class="acc-field-val">${r.rol||'—'}</div></div>
+          <div class="acc-field"><div class="acc-field-lbl">Puntaje</div><div class="acc-field-val" style="color:var(--gold)">${r.score} / 100</div></div>
+        </div>
+        <div class="acc-mods">${modChips}</div>
+        <button class="btn-detail" onclick="showDetail(${i})">📊 Ver perfil detallado por dimensión</button>
+      </div>
+    </div>`;
+  }).join("");
+
+  toast("✅ " + records.length + " respuesta(s) desde la nube");
+  renderAnalytics(records);
+  // Show ICONE report section
+  document.getElementById('icone-section').style.display = 'block';
+}
+
+function toggleParticipants() {
+  const body = document.getElementById('participants-body');
+  const arr  = document.getElementById('participants-arrow');
+  const open = body.classList.toggle('open');
+  arr.classList.toggle('open', open);
+}
+
+function toggleAcc(i) {
+  const body = document.getElementById(`body-${i}`);
+  const arr  = document.getElementById(`arr-${i}`);
+  const open = body.classList.toggle('open');
+  arr.classList.toggle('open', open);
+}
+
+let _modalChart = null;
+function showDetail(i) {
+  const r = window._adminRecords[i];
+  if (!r) return;
+  document.getElementById('modal-name').textContent = r.nombre;
+  document.getElementById('modal-sub').innerHTML =
+    `<span class="pill ${({p:'pill-p',f:'pill-f',e:'pill-e'})[r.nivelKey]||'pill-p'}">${r.nivel}</span>
+     &nbsp; ${r.score} puntos &nbsp;·&nbsp; ${r.tienda||'—'} &nbsp;·&nbsp; ${r.rol||'—'}`;
+
+  const modNames = ['Fundacional','Aplicativo','Interactivo','Estratégico','Ética y Criterio'];
+  const modPcts  = r.modulos ? r.modulos.map(m=>m.max>0?Math.round(m.score/m.max*100):0) : Array(5).fill(0);
+
+  // Radar chart
+  if (_modalChart) { _modalChart.destroy(); _modalChart=null; }
+  _modalChart = new Chart(document.getElementById('modal-radar'), {
+    type:'radar',
+    data:{
+      labels: modNames,
+      datasets:[{
+        label: r.nombre,
+        data: modPcts,
+        backgroundColor:'rgba(232,64,28,.15)',
+        borderColor:'rgba(232,64,28,.8)',
+        pointBackgroundColor:'#E8401C',
+        pointRadius:4, borderWidth:2
+      }]
+    },
+    options:{
+      scales:{r:{
+        min:0,max:100,
+        ticks:{color:'rgba(255,255,255,.4)',font:{size:9},stepSize:25,backdropColor:'transparent'},
+        grid:{color:'rgba(255,255,255,.1)'},
+        pointLabels:{color:'rgba(255,255,255,.7)',font:{size:10}}
+      }},
+      plugins:{
+        legend:{display:false},
+        datalabels:{display:false}
+      }
+    }
+  });
+
+  // Bar details
+  document.getElementById('modal-bars').innerHTML = modNames.map((nm,mi)=>{
+    const pct = modPcts[mi];
+    const col = pct>=67?'#00d48a':pct>=34?'#66ccff':'#ffb347';
+    return `<div class="modal-bar-row">
+      <div class="modal-bar-lbl">${nm}</div>
+      <div class="modal-bar-track"><div class="modal-bar-fill" style="width:${pct}%;background:linear-gradient(90deg,${col},${col}99)"></div></div>
+      <div class="modal-bar-val" style="color:${col}">${pct}%</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('detail-modal').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  document.getElementById('detail-modal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function _buildRows(records) {
+  const hdrs = ["N°","Nombre","Email","Local / Área","Rol","Puntaje","Nivel",
+    "D1-Fundacional","D2-Aplicativo","D3-Interactivo","D4-Estratégico","D5-Ética y Criterio",
+    ...Array.from({length:25},(_,i)=>`P${i+1}`),"Fecha"];
+  const rows = records.map((r,i) => {
+    const mods = r.modulos ? r.modulos.map(m=>`${m.score}/${m.max}`) : Array(5).fill("");
+    return [i+1, r.nombre, r.email, r.tienda||"", r.rol||"", r.score, r.nivel,
+      ...mods, ...(r.respuestas||[]),
+      new Date(r.timestamp).toLocaleString("es-CO")];
+  });
+  return {hdrs, rows};
+}
+
+/* Excel real .xlsx con SheetJS — compatible iOS/Android/PC */
+async function exportExcel() {
+  toast("⏳ Generando Excel...");
+  try {
+    if (typeof XLSX === 'undefined') throw new Error("Librería XLSX no cargada aún — espera 3 seg e intenta de nuevo");
+
+    const records = (window._adminRecords && window._adminRecords.length)
+      ? window._adminRecords : await loadFromCloud();
+    if (!records.length) return toast("No hay datos para exportar aún");
+
+    const {hdrs, rows} = _buildRows(records);
+
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet([hdrs, ...rows]);
+
+    // Ancho de columnas seguro
+    ws['!cols'] = hdrs.map((h, i) => {
+      let max = h.length;
+      rows.forEach(r => { const l = String(r[i]||'').length; if(l > max) max = l; });
+      return { wch: Math.min(max + 2, 50) };
+    });
+
+    XLSX.utils.book_append_sheet(wb, ws, "DiagnosticoIA");
+
+    // Método de descarga compatible con iOS Safari
+    const wbout = XLSX.write(wb, { bookType:'xlsx', type:'array' });
+    const blob = new Blob([new Uint8Array(wbout)], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `DiagnosticoIA_${new Date().toISOString().slice(0,10)}.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 2000);
+
+    toast("✅ Excel descargado — " + records.length + " filas");
+  } catch(e) {
+    console.error("exportExcel:", e);
+    toast("⚠️ " + (e.message || "Error al generar Excel"));
+  }
+}
+
+
+function shareDashboard() {
+  const url = location.origin + location.pathname + '?dashboard';
+  navigator.clipboard.writeText(url).then(() => {
+    toast("✅ Enlace del dashboard copiado — compártelo sin contraseña");
+  }).catch(() => {
+    window.prompt("Copia este enlace del dashboard:", url);
+  });
+}
+
+/* ══════════════════════════════════
+   ICONE REPORT
+══════════════════════════════════ */
+let _iconeReport = null;
+
+function generateIconeReport() {
+  const records = window._adminRecords;
+  if (!records || !records.length) { toast('⚠️ Carga los datos primero (Actualizar)'); return; }
+
+  const total = records.length;
+  const avg = Math.round(records.reduce((s,r)=>s+r.score,0)/total);
+  const lc = {p:0,f:0,e:0};
+  records.forEach(r=>{ if(lc[r.nivelKey]!==undefined) lc[r.nivelKey]++; });
+
+  const ms=Array(5).fill(0), mx=Array(5).fill(0);
+  records.forEach(r=>{ if(r.modulos) r.modulos.forEach((m,i)=>{ ms[i]+=m.score; mx[i]=m.max; }); });
+  const mp=ms.map((s,i)=>mx[i]>0?Math.round(s/total/mx[i]*100):0);
+  const modNms=['Fundacional','Aplicativo','Interactivo','Estratégico','Ética y Criterio'];
+  const modWithPct = modNms.map((n,i)=>({n,p:mp[i]})).sort((a,b)=>b.p-a.p);
+  const top3 = modWithPct.slice(0,3);
+  const bot3 = [...modWithPct].sort((a,b)=>a.p-b.p).slice(0,3);
+
+  const nivelGrupo = avg>=67?'Experto/a IA':avg>=34?'Explorador/a IA':'Curioso/a IA';
+  const recomTxt = nivelGrupo==='Experto/a IA'
+    ? 'El grupo demuestra un dominio sólido de la IA. Conviene enfocar el curso en estrategia avanzada, automatización y criterio ético para consolidar soluciones de alto impacto.'
+    : nivelGrupo==='Explorador/a IA'
+    ? 'El grupo está consolidando sus habilidades con IA. Se recomienda reforzar las dimensiones con menor puntaje mediante práctica guiada con casos reales.'
+    : 'El grupo parte desde los fundamentos. Se recomienda iniciar con conceptos base y prompting práctico antes de avanzar a la integración estratégica.';
+
+  _iconeReport = '**Diagnóstico Inicial · Habilidades con IA — Politécnico Grancolombiano**\n\n'
+    + 'El grupo completó el diagnóstico con **' + total + ' participantes**. El promedio general fue de **' + avg + '/100**, ubicando al equipo en el nivel **' + nivelGrupo + '**.\n\n'
+    + '**Composición del grupo:**\n'
+    + '• 🌱 Curioso/a IA: ' + lc.p + ' persona(s) — ' + Math.round(lc.p/total*100) + '%\n'
+    + '• 🧭 Explorador/a IA: ' + lc.f + ' persona(s) — ' + Math.round(lc.f/total*100) + '%\n'
+    + '• 🏆 Experto/a IA: ' + lc.e + ' persona(s) — ' + Math.round(lc.e/total*100) + '%\n\n'
+    + '**Fortalezas del grupo (dimensiones con mayor dominio):**\n'
+    + '• ' + top3[0].n + ': ' + top3[0].p + '%\n'
+    + '• ' + top3[1].n + ': ' + top3[1].p + '%\n'
+    + '• ' + top3[2].n + ': ' + top3[2].p + '%\n\n'
+    + '**Áreas prioritarias de desarrollo:**\n'
+    + '• ' + bot3[0].n + ': ' + bot3[0].p + '%\n'
+    + '• ' + bot3[1].n + ': ' + bot3[1].p + '%\n'
+    + '• ' + bot3[2].n + ': ' + bot3[2].p + '%\n\n'
+    + '**Recomendación estratégica:** ' + recomTxt;
+
+  const preview = document.getElementById('icone-preview');
+  preview.innerHTML = _iconeReport
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\n/g,'<br>');
+  preview.style.display = 'block';
+  document.getElementById('icone-chat').style.display = 'block';
+  document.getElementById('btn-publish-icone').style.display = '';
+  toast('✅ Informe generado — refínalo con el chat y luego publícalo');
+}
+
+function sendIconeChat() {
+  const input = document.getElementById('icone-chat-input');
+  const msg = input.value.trim();
+  if (!msg || !_iconeReport) return;
+  input.value = '';
+
+  const history = document.getElementById('icone-chat-history');
+  history.innerHTML += '<div style="background:rgba(232,64,28,.12);border-radius:6px;padding:6px 10px;margin-bottom:6px;font-size:.78rem;color:var(--t1)">👤 ' + msg + '</div>';
+
+  _iconeReport = applyIconeInstruction(_iconeReport, msg);
+
+  const preview = document.getElementById('icone-preview');
+  preview.innerHTML = _iconeReport
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\n/g,'<br>');
+
+  history.innerHTML += '<div style="background:rgba(0,200,255,.08);border-radius:6px;padding:6px 10px;margin-bottom:6px;font-size:.78rem;color:var(--cyan)">🤖 Informe actualizado ✓</div>';
+  history.scrollTop = history.scrollHeight;
+}
+
+function applyIconeInstruction(report, instruction) {
+  const low = instruction.toLowerCase();
+  if (low.includes('conciso') || low.includes('corto') || low.includes('breve')) {
+    return report.split('\n').filter(l=>l.trim().startsWith('**')||l.trim().startsWith('•')).join('\n');
+  }
+  if (low.includes('formal') || low.includes('ejecutiv')) {
+    return report.replace(/[🌱⭐🏆👤🤖•]/g,'').replace(/\*\*(.*?)\*\*/g,'$1').trim();
+  }
+  if (low.includes('recomend')) {
+    const idx = report.indexOf('Recomendación');
+    return idx>=0 ? report.slice(idx) : report;
+  }
+  if (low.includes('fortalez')) {
+    const idx = report.indexOf('Fortalezas');
+    const end = report.indexOf('Áreas');
+    return (idx>=0&&end>=0) ? report.slice(idx,end).trim() : report;
+  }
+  if (low.includes('área')||low.includes('area')||low.includes('mejorar')||low.includes('desarrollo')) {
+    const idx = report.indexOf('Áreas');
+    return idx>=0 ? report.slice(idx).trim() : report;
+  }
+  return report + '\n\n**Nota del facilitador:** ' + instruction;
+}
+
+async function publishIconeReport() {
+  if (!_iconeReport) return;
+  const btn = document.getElementById('btn-publish-icone');
+  btn.textContent = '⏳ Publicando...';
+  btn.disabled = true;
+  try {
+    const token = await getToken();
+    if (!token) throw new Error('no token');
+    let sha = '';
+    const chk = await fetch(
+      'https://api.github.com/repos/' + GH_REPO + '/contents/icone-report.json',
+      { headers: { Authorization: 'token ' + token, Accept: 'application/vnd.github.v3+json' } }
+    );
+    if (chk.ok) { const d = await chk.json(); sha = d.sha || ''; }
+    const content = JSON.stringify({ report: _iconeReport, updated: new Date().toISOString() });
+    const bytes = new TextEncoder().encode(content);
+    let binary = '';
+    bytes.forEach(b => binary += String.fromCharCode(b));
+    const b64 = btoa(binary);
+    const payload = { message: 'Informe ICONE actualizado', content: b64 };
+    if (sha) payload.sha = sha;
+    const res = await fetch(
+      'https://api.github.com/repos/' + GH_REPO + '/contents/icone-report.json',
+      { method: 'PUT', headers: { Authorization: 'token ' + token, Accept: 'application/vnd.github.v3+json', 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }
+    );
+    if (!res.ok) throw new Error(await res.text());
+    toast('✅ Informe publicado — ya aparece en el dashboard compartido');
+    btn.textContent = '✅ Publicado';
+    setTimeout(() => { btn.textContent = '☁️ Publicar en Dashboard'; btn.disabled = false; }, 3000);
+  } catch(e) {
+    toast('⚠️ Error: ' + e.message);
+    btn.textContent = '☁️ Publicar en Dashboard';
+    btn.disabled = false;
+  }
+}
+
+function switchDashTab(tab) {
+  const tabs = ['dist','mods','qs'];
+  document.querySelectorAll('#dash-tabs .an-tab').forEach((btn,i) => btn.classList.toggle('active', tabs[i]===tab));
+  ['dan-dist','dan-mods','dan-qs'].forEach(id => document.getElementById(id).classList.remove('active'));
+  document.getElementById('dan-' + tab).classList.add('active');
+}
+
+let _dci = {};
+async function loadDashboard() {
+  const btn = document.getElementById('dash-refresh-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Actualizando...'; }
+  // Show cached stats instantly
+  const cached = _getLocal();
+  if (cached.length) renderDashboard(cached);
+
+  toast("☁️ Cargando datos del grupo...");
+  const [records] = await Promise.all([loadFromCloud(), loadIconeReportForDashboard()]);
+  renderDashboard(records);
+  toast("✅ Dashboard actualizado — " + records.length + " participantes");
+  if (btn) { btn.disabled = false; btn.textContent = '🔄 Actualizar datos'; }
+}
+
+async function loadIconeReportForDashboard() {
+  try {
+    const res = await fetch(
+      'https://raw.githubusercontent.com/' + GH_REPO + '/main/icone-report.json?t=' + Date.now()
+    );
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.report) return;
+    const el = document.getElementById('dash-icone-content');
+    const container = document.getElementById('dash-icone-report');
+    if (el && container) {
+      el.innerHTML = data.report
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\n/g, '<br>');
+      container.style.display = 'block';
+    }
+  } catch {}
+}
+
+function renderDashboard(records) {
+  // Stats
+  const avg = records.length ? Math.round(records.reduce((s,r)=>s+r.score,0)/records.length) : 0;
+  const lc = {p:0,f:0,e:0};
+  records.forEach(r => { if(lc[r.nivelKey]!==undefined) lc[r.nivelKey]++; });
+  const pct = k => records.length ? Math.round(lc[k]/records.length*100) : 0;
+  document.getElementById('dash-stats').innerHTML = `
+    <div class="glass stat"><div class="stat-lbl">Total</div><div class="stat-val">${records.length}</div><div class="stat-sub">participantes</div></div>
+    <div class="glass stat"><div class="stat-lbl">Promedio</div><div class="stat-val" style="background:linear-gradient(135deg,#E8401C,#D4A847);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">${avg}</div><div class="stat-sub">puntos del grupo</div></div>
+    <div class="glass stat"><div class="stat-lbl">🌱 Principiante</div><div class="stat-val" style="color:#ffb347">${lc.p}</div><div class="stat-sub">${pct('p')}%</div></div>
+    <div class="glass stat"><div class="stat-lbl">⭐ En Formación</div><div class="stat-val" style="color:#66ccff">${lc.f}</div><div class="stat-sub">${pct('f')}%</div></div>
+    <div class="glass stat"><div class="stat-lbl">🏆 Experto</div><div class="stat-val" style="color:#00d48a">${lc.e}</div><div class="stat-sub">${pct('e')}%</div></div>`;
+  if (!records.length) return;
+
+  // Reuse renderAnalytics logic but with 'd' prefixed canvas IDs
+  Object.values(_dci).forEach(c=>{try{c.destroy();}catch{}});
+  _dci = {};
+
+  const binPcts = [0,0,0,0,0];
+  records.forEach(r=>{ binPcts[Math.min(4,Math.floor(r.score/20))]++; });
+  const bpPct = binPcts.map(v=>records.length?Math.round(v/records.length*100):0);
+
+  _dci.dist = new Chart(document.getElementById('dch-dist'),{type:'bar',data:{labels:['0–20','21–40','41–60','61–80','81–100'],datasets:[{data:bpPct,borderRadius:6,borderSkipped:false,backgroundColor:['rgba(255,140,0,.7)','rgba(255,200,60,.7)','rgba(100,190,255,.7)','rgba(0,200,120,.75)','rgba(0,212,138,.9)']}]},options:{plugins:{legend:{display:false},datalabels:{color:'#fff',font:{weight:'bold',size:12},anchor:'end',align:'top',formatter:v=>v>0?v+'%':''}},scales:{x:CHART_SCALE.x,y:{...CHART_SCALE.y,min:0,max:100,ticks:{...CHART_SCALE.y.ticks,callback:v=>v+'%'}}}}});
+
+  _dci.levels = new Chart(document.getElementById('dch-levels'),{type:'doughnut',data:{labels:['🌱 Principiante','⭐ En Formación','🏆 Experto'],datasets:[{data:[lc.p,lc.f,lc.e],backgroundColor:['rgba(255,179,71,.85)','rgba(102,204,255,.85)','rgba(0,212,138,.85)'],borderWidth:0,hoverOffset:8}]},options:{plugins:{legend:{position:'bottom',labels:{color:'rgba(255,255,255,.65)',font:{size:10},boxWidth:10,padding:10}},datalabels:{color:'#fff',font:{weight:'bold',size:12},formatter:(v,ctx)=>{const t=ctx.dataset.data.reduce((a,b)=>a+b,0);return t?Math.round(v/t*100)+'%':'';}}}}});
+
+  // Local + Rol charts
+  const lm={}, rm={};
+  records.forEach(r=>{const k=(r.tienda||'S/E').trim()||'S/E'; lm[k]=(lm[k]||0)+1;});
+  records.forEach(r=>{const k=(r.rol||'S/E').trim()||'S/E'; rm[k]=(rm[k]||0)+1;});
+  const ll=Object.keys(lm).sort((a,b)=>lm[b]-lm[a]).slice(0,10);
+  const rl=Object.keys(rm).sort((a,b)=>rm[b]-rm[a]);
+  _dci.local = new Chart(document.getElementById('dch-local'),{type:'bar',data:{labels:ll,datasets:[{data:ll.map(k=>records.length?Math.round(lm[k]/records.length*100):0),borderRadius:5,borderSkipped:false,backgroundColor:'rgba(0,200,255,.65)'}]},options:{indexAxis:'y',plugins:{legend:{display:false},datalabels:{color:'#fff',font:{weight:'bold',size:11},anchor:'end',align:'right',formatter:v=>v+'%'}},scales:{x:{...CHART_SCALE.x,min:0,max:100,ticks:{...CHART_SCALE.x.ticks,callback:v=>v+'%'}},y:{...CHART_SCALE.y,ticks:{color:'rgba(255,255,255,.7)',font:{size:9}}}}}});
+  _dci.rol = new Chart(document.getElementById('dch-rol'),{type:'doughnut',data:{labels:rl,datasets:[{data:rl.map(k=>rm[k]),backgroundColor:['rgba(232,64,28,.8)','rgba(212,168,71,.8)','rgba(0,200,255,.8)','rgba(0,212,138,.8)','rgba(123,47,255,.8)','rgba(255,140,0,.8)'],borderWidth:0}]},options:{plugins:{legend:{position:'bottom',labels:{color:'rgba(255,255,255,.65)',font:{size:9},boxWidth:10,padding:8}},datalabels:{color:'#fff',font:{weight:'bold',size:11},formatter:(v,ctx)=>{const t=ctx.dataset.data.reduce((a,b)=>a+b,0);return t?Math.round(v/t*100)+'%':''}}}}});
+
+  // Module avg
+  const ms=Array(5).fill(0), mx=Array(5).fill(0);
+  records.forEach(r=>{if(r.modulos)r.modulos.forEach((m,i)=>{ms[i]+=m.score;mx[i]=m.max;});});
+  const mp=ms.map((s,i)=>mx[i]>0?Math.round(s/records.length/mx[i]*100):0);
+  _dci.modsAvg=new Chart(document.getElementById('dch-mods-avg'),{type:'bar',data:{labels:['D1','D2','D3','D4','D5'],datasets:[{data:mp,borderRadius:6,borderSkipped:false,backgroundColor:mp.map(v=>v>=67?'rgba(0,212,138,.75)':v>=34?'rgba(100,190,255,.75)':'rgba(255,140,0,.75)')}]},options:{plugins:{legend:{display:false},datalabels:{color:'#fff',font:{weight:'bold',size:11},anchor:'end',align:'top',formatter:v=>v+'%'}},scales:{x:CHART_SCALE.x,y:{...CHART_SCALE.y,min:0,max:100,ticks:{...CHART_SCALE.y.ticks,callback:v=>v+'%'}}}}});
+
+  // Module donuts
+  const modNms=['D1 — Fundacional','D2 — Aplicativo','D3 — Interactivo','D4 — Estratégico','D5 — Ética y Criterio'];
+  document.getElementById('dash-mods-grid').innerHTML=modNms.map((nm,mi)=>`<div class="glass mod-chart-box"><div class="mod-chart-name">${nm}</div><div style="position:relative;height:170px"><canvas id="dch-mod-${mi}"></canvas></div></div>`).join('');
+  modNms.forEach((_,mi)=>{
+    const mc={p:0,f:0,e:0};
+    records.forEach(r=>{if(!r.modulos||!r.modulos[mi])return;const p=r.modulos[mi].max>0?r.modulos[mi].score/r.modulos[mi].max*100:0;if(p<34)mc.p++;else if(p<67)mc.f++;else mc.e++;});
+    _dci[`mod${mi}`]=new Chart(document.getElementById(`dch-mod-${mi}`),{type:'doughnut',data:{labels:['Principiante','En Formación','Experto'],datasets:[{data:[mc.p,mc.f,mc.e],backgroundColor:['rgba(255,179,71,.85)','rgba(102,204,255,.85)','rgba(0,212,138,.85)'],borderWidth:0}]},options:{plugins:{legend:{position:'bottom',labels:{color:'rgba(255,255,255,.6)',font:{size:9},boxWidth:8,padding:6}},datalabels:{color:'#fff',font:{weight:'bold',size:12},formatter:(v,ctx)=>{const t=ctx.dataset.data.reduce((a,b)=>a+b,0);return t&&v>0?Math.round(v/t*100)+'%':''}}}}});
+  });
+
+  // Question bars
+  const qc=Array.from({length:25},()=>({A:0,B:0,C:0,t:0}));
+  records.forEach(r=>{if(!r.respuestas)return;r.respuestas.forEach((ans,qi)=>{if(qi<25){qc[qi][ans]=(qc[qi][ans]||0)+1;qc[qi].t++;}});});
+  document.getElementById('dash-qs-grid').innerHTML=qc.map((q,qi)=>{
+    const pA=q.t?Math.round(q.A/q.t*100):0,pB=q.t?Math.round(q.B/q.t*100):0,pC=q.t?Math.round(q.C/q.t*100):0;
+    const txt=QS[qi]?QS[qi].t.slice(0,65)+(QS[qi].t.length>65?'…':''):'';
+    return `<div class="glass q-chart-box"><div class="q-chart-title"><span style="color:var(--coral);font-weight:900">P${qi+1}</span> ${txt}</div><div class="ans-bar-row"><span class="ans-lbl ans-lbl-a">A</span><div class="ans-track"><div class="ans-fill ans-fill-a" style="width:${pA}%"></div></div><span class="ans-pct">${pA}%</span></div><div class="ans-bar-row"><span class="ans-lbl ans-lbl-b">B</span><div class="ans-track"><div class="ans-fill ans-fill-b" style="width:${pB}%"></div></div><span class="ans-pct">${pB}%</span></div><div class="ans-bar-row"><span class="ans-lbl ans-lbl-c">C</span><div class="ans-track"><div class="ans-fill ans-fill-c" style="width:${pC}%"></div></div><span class="ans-pct">${pC}%</span></div><div style="font-size:.65rem;color:var(--t3);margin-top:4px">${q.t} resp.</div></div>`;
+  }).join('');
+}
+
+function clearAll() {
+  if (!confirm("¿Limpiar la caché local? (Los datos en la nube se conservan)")) return;
+  localStorage.removeItem("iaexp_v1");
+  toast("🗑️ Caché local limpiada — los datos en GitHub siguen intactos");
+}
+
+/* ══════════════════════════════════
+   CONFETTI
+══════════════════════════════════ */
+function confetti() {
+  const colors = ["#E8401C","#D4A847","#00d48a","#00C8FF","#fff","#6ba3ff"];
+  for (let i = 0; i < 80; i++) {
+    setTimeout(() => {
+      const el = document.createElement("div");
+      el.className = "confetti-piece";
+      el.style.cssText = `
+        left:${Math.random()*100}vw;
+        background:${colors[Math.floor(Math.random()*colors.length)]};
+        width:${6+Math.random()*8}px;
+        height:${6+Math.random()*8}px;
+        border-radius:${Math.random()>0.5?"50%":"2px"};
+        animation-duration:${2+Math.random()*2}s;
+        animation-delay:0s;
+      `;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 4500);
+    }, i * 30);
+  }
+}
+
+/* ══════════════════════════════════
+   PARTICLES
+══════════════════════════════════ */
+(function initParticles() {
+  const cv = document.getElementById("cv");
+  const ctx = cv.getContext("2d");
+  let W, H, pts = [];
+
+  function resize() {
+    W = cv.width = window.innerWidth;
+    H = cv.height = window.innerHeight;
+  }
+  window.addEventListener("resize", resize);
+  resize();
+
+  for (let i = 0; i < 55; i++) {
+    pts.push({
+      x: Math.random() * W, y: Math.random() * H,
+      vx: (Math.random()-.5) * .4, vy: (Math.random()-.5) * .4,
+      r: 1 + Math.random() * 2,
+      a: Math.random()
+    });
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    pts.forEach(p => {
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
+      if (p.y < 0) p.y = H; if (p.y > H) p.y = 0;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(212,168,71,${p.a * .35})`;
+      ctx.fill();
+    });
+    // Lines between close particles
+    pts.forEach((a, i) => {
+      pts.slice(i+1).forEach(b => {
+        const d = Math.hypot(a.x-b.x, a.y-b.y);
+        if (d < 100) {
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.strokeStyle = `rgba(212,168,71,${(1-d/100)*.08})`;
+          ctx.lineWidth = .5;
+          ctx.stroke();
+        }
+      });
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* ══════════════════════════════════
+   TOAST
+══════════════════════════════════ */
+let toastT;
+function toast(msg) {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  clearTimeout(toastT);
+  toastT = setTimeout(() => el.classList.remove("show"), 3000);
+}
+
+/* ══════════════════════════════════
+   INIT
+══════════════════════════════════ */
+// Handle URL params
+(function() {
+  const params = new URLSearchParams(location.search);
+  if (params.get("dashboard") !== null) {
+    showView("dashboard");
+    getToken();
+    loadDashboard();
+  } else if (params.get("admin") !== null) {
+    showView("admin");
+    getToken(); // pre-calentar token mientras el usuario escribe la contraseña
+  } else if (params.get("r")) {
+    // Someone opened a shared result link — show their result
+    const rec = decodeRecord(params.get("r"));
+    if (rec) {
+      S.lastRecord = rec;
+      const { total, modScores } = { total: rec.score, modScores: Object.fromEntries(rec.modulos.map(m => [m.id, m.score])) };
+      renderResult(total, getLevel(total), modScores, rec.nombre);
+    }
+  }
+})();
+</script>
+</body>
+</html>
