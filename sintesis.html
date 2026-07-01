@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Síntesis de Expectativas · Diagnóstico IA</title>
+<style>
+:root{
+  --bg:#050d1f; --card:#0b1c30; --t1:#eaf2ff; --t2:#a9bad2; --t3:#6b7d99;
+  --cyan:#00b3e1; --gold:#d4a847; --coral:#e8401c; --green:#00d48a; --purple:#7b2fff;
+  --line:rgba(255,255,255,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:
+  radial-gradient(1200px 700px at 15% -10%,rgba(0,179,225,.10),transparent 60%),
+  radial-gradient(1000px 700px at 110% 10%,rgba(123,47,255,.10),transparent 55%),
+  var(--bg);color:var(--t1);min-height:100vh;line-height:1.5}
+.wrap{max-width:1080px;margin:0 auto;padding:24px 18px 80px}
+.glass{background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.01));
+  border:1px solid var(--line);border-radius:16px;backdrop-filter:blur(6px)}
+.hdr{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:20px}
+.h1{font-size:1.5rem;font-weight:900;letter-spacing:-.3px;
+  background:linear-gradient(135deg,var(--cyan),var(--gold));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.sub{font-size:.82rem;color:var(--t3);margin-top:3px}
+.poli-bar{font-size:.68rem;color:var(--t3);letter-spacing:.4px;text-transform:uppercase;margin-top:6px}
+.btn{border:none;border-radius:10px;padding:10px 16px;font-weight:800;font-size:.85rem;cursor:pointer;font-family:inherit;transition:.15s;color:#04121f}
+.btn:hover{transform:translateY(-1px)}
+.btn-cyan{background:linear-gradient(135deg,var(--cyan),#0090c8);box-shadow:0 4px 14px rgba(0,179,225,.3)}
+.btn-gold{background:linear-gradient(135deg,var(--gold),#b8862f);box-shadow:0 4px 14px rgba(212,168,71,.3)}
+.btn-ghost{background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--t1)}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+input,select{background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:9px;
+  padding:10px 13px;color:var(--t1);font-size:.85rem;font-family:inherit;outline:none}
+input:focus,select:focus{border-color:var(--cyan)}
+label{font-size:.68rem;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;font-weight:800;display:block;margin-bottom:5px}
+/* Gate */
+.gate{max-width:400px;margin:14vh auto;padding:34px 30px;text-align:center}
+.gate .h1{font-size:1.3rem;justify-content:center}
+.gate input{width:100%;text-align:center;margin:18px 0 14px;letter-spacing:3px}
+/* Stat cards */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px}
+.stat{padding:16px 18px}
+.stat-lbl{font-size:.66rem;color:var(--t3);text-transform:uppercase;letter-spacing:.6px;font-weight:800}
+.stat-val{font-size:1.9rem;font-weight:900;margin-top:3px}
+.stat-sub{font-size:.72rem;color:var(--t3)}
+/* Settings */
+.settings{padding:16px 18px;margin-bottom:20px}
+.settings .row{align-items:flex-end}
+.settings .fld{flex:1;min-width:150px}
+.settings .fld input,.settings .fld select{width:100%}
+.hint{font-size:.72rem;color:var(--t3);margin-top:8px;line-height:1.5}
+.hint a{color:var(--cyan)}
+/* Question block */
+.qblock{padding:18px 20px;margin-bottom:16px}
+.qhead{display:flex;align-items:flex-start;gap:12px;margin-bottom:14px}
+.qnum{flex-shrink:0;width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;
+  font-weight:900;font-size:.95rem;color:#04121f;background:linear-gradient(135deg,var(--coral),var(--gold))}
+.qtitle{font-size:1rem;font-weight:800;color:var(--t1)}
+.qmeta{font-size:.74rem;color:var(--t3);margin-top:2px}
+.qactions{margin-left:auto;flex-shrink:0}
+.qactions .btn{padding:8px 13px;font-size:.78rem}
+/* Synthesis output */
+.synth{margin-top:6px;border-top:1px solid var(--line);padding-top:14px;display:none}
+.synth.show{display:block}
+.esencia{background:rgba(0,179,225,.07);border:1px solid rgba(0,179,225,.22);border-radius:11px;padding:13px 15px;margin-bottom:14px}
+.esencia .k{font-size:.66rem;color:var(--cyan);font-weight:900;text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px}
+.esencia p{font-size:.9rem;color:var(--t1);line-height:1.65}
+.theme{border:1px solid var(--line);border-radius:11px;padding:12px 14px;margin-bottom:10px;background:rgba(255,255,255,.02)}
+.theme-top{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:6px}
+.theme-title{font-weight:800;font-size:.92rem;color:var(--t1)}
+.badge{font-size:.64rem;font-weight:900;padding:3px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:.4px}
+.b-n{background:rgba(255,255,255,.08);color:var(--t2)}
+.b-alta{background:rgba(232,64,28,.16);color:#ff7a5c;border:1px solid rgba(232,64,28,.4)}
+.b-media{background:rgba(212,168,71,.16);color:var(--gold);border:1px solid rgba(212,168,71,.4)}
+.b-baja{background:rgba(0,212,138,.13);color:var(--green);border:1px solid rgba(0,212,138,.35)}
+.theme-res{font-size:.85rem;color:var(--t2);line-height:1.6}
+.cita{font-size:.79rem;color:var(--t3);font-style:italic;border-left:2px solid var(--line);padding-left:9px;margin-top:6px}
+.prio-box{background:rgba(212,168,71,.07);border:1px solid rgba(212,168,71,.22);border-radius:11px;padding:13px 15px;margin-top:12px}
+.prio-box .k{font-size:.66rem;color:var(--gold);font-weight:900;text-transform:uppercase;letter-spacing:.6px;margin-bottom:7px}
+.prio-box ul{list-style:none;display:flex;flex-direction:column;gap:6px}
+.prio-box li{font-size:.85rem;color:var(--t1);padding-left:20px;position:relative}
+.prio-box li:before{content:"→";position:absolute;left:0;color:var(--gold);font-weight:900}
+/* Raw answers */
+.raw-toggle{font-size:.78rem;color:var(--cyan);cursor:pointer;user-select:none;font-weight:700;margin-top:10px;display:inline-block}
+.raw-list{display:none;margin-top:10px;flex-direction:column;gap:8px}
+.raw-list.show{display:flex}
+.raw-item{background:rgba(0,0,0,.22);border:1px solid var(--line);border-radius:9px;padding:9px 12px}
+.raw-name{font-size:.68rem;color:var(--gold);font-weight:800}
+.raw-ans{font-size:.83rem;color:var(--t1);white-space:pre-wrap;margin-top:2px}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.25);border-top-color:var(--cyan);border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--card);border:1px solid var(--line);
+  padding:12px 20px;border-radius:11px;font-size:.85rem;box-shadow:0 8px 30px rgba(0,0,0,.5);z-index:99;opacity:0;transition:.3s;pointer-events:none}
+.toast.show{opacity:1;bottom:32px}
+.global-box{padding:20px 22px;margin-bottom:20px;border:1px solid rgba(123,47,255,.28);
+  background:linear-gradient(180deg,rgba(123,47,255,.08),rgba(123,47,255,.02))}
+.global-box .k{font-size:.7rem;color:var(--purple);font-weight:900;text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px}
+.global-box .body{font-size:.9rem;color:var(--t1);line-height:1.7;white-space:pre-wrap}
+.empty{text-align:center;padding:40px;color:var(--t3)}
+.empty .ico{font-size:2.4rem;margin-bottom:8px}
+</style>
+</head>
+<body>
+
+<!-- GATE -->
+<div id="gate" class="glass gate">
+  <div class="h1">🧠 Síntesis de Expectativas</div>
+  <div class="sub" style="margin-top:8px">Panel del facilitador · acceso restringido</div>
+  <input type="password" id="pwd" placeholder="Contraseña" onkeydown="if(event.key==='Enter')checkPwd()"/>
+  <button class="btn btn-cyan" style="width:100%" onclick="checkPwd()">Ingresar →</button>
+  <div id="gate-err" style="color:var(--coral);font-size:.78rem;margin-top:10px;min-height:16px"></div>
+</div>
+
+<!-- APP -->
+<div id="app" class="wrap" style="display:none">
+  <div class="hdr">
+    <div>
+      <div class="h1">🧠 Síntesis de Expectativas</div>
+      <div class="sub">Recoge, resume y prioriza las 5 respuestas abiertas de todos los participantes — sin perder ninguna.</div>
+      <div class="poli-bar">Politécnico Grancolombiano · Curso de Habilidades con IA · Jorge Hugo Pérez</div>
+    </div>
+    <div class="row">
+      <button class="btn btn-ghost" onclick="loadData()">🔄 Actualizar datos</button>
+      <button class="btn btn-gold" id="btn-all" onclick="synthAll()">✨ Sintetizar todo</button>
+    </div>
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <!-- Settings -->
+  <div class="glass settings">
+    <div class="row">
+      <div class="fld">
+        <label>Motor de IA</label>
+        <select id="provider" onchange="saveCfg()">
+          <option value="gemini">Google Gemini (gratis)</option>
+          <option value="anthropic">Anthropic Claude</option>
+          <option value="openai">OpenAI</option>
+        </select>
+      </div>
+      <div class="fld" style="flex:2">
+        <label>API key (se guarda solo en este navegador)</label>
+        <input type="password" id="apikey" placeholder="Pega tu API key aquí" oninput="saveCfg()"/>
+      </div>
+      <button class="btn btn-ghost" onclick="testKey()">Probar</button>
+    </div>
+    <div class="hint" id="key-hint"></div>
+  </div>
+
+  <!-- Global summary -->
+  <div class="glass global-box" id="global-box" style="display:none">
+    <div class="k">🌐 Resumen ejecutivo del grupo (todas las preguntas)</div>
+    <div class="body" id="global-body"></div>
+  </div>
+
+  <!-- Questions -->
+  <div id="questions"><div class="empty"><div class="ico">⏳</div>Cargando respuestas…</div></div>
+</div>
+
+<script>
+/* ── Config idéntica al panel ── */
+const ADMIN_PWD = "Diagnosticos2026";
+const SB_URL    = "https://nvgkhdrrxqdgxktfkioa.supabase.co";
+const SB_KEY    = "sb_publishable_d1RrtE7S-9a8e8mGKRRjxQ_4HU_nkDl";
+const SB_TABLE  = "diagnostico_ia";
+const CURSO     = "ia-experto";
+
+/* Las 5 preguntas abiertas canónicas (orden fijo) */
+const QUESTIONS = [
+  "¿Qué esperas lograr al terminar este curso? Describe tu meta principal.",
+  "¿Qué te gustaría aprender o saber hacer con IA que hoy no puedes?",
+  "¿En qué parte de tu trabajo, tu estudio o tu vida quieres aplicar la IA?",
+  "¿Qué dudas, miedos o barreras sientes hoy frente a la IA?",
+  "Si dentro de unos meses este curso fuera un éxito total para ti, ¿qué habría cambiado en ti o en tu trabajo?"
+];
+
+let RECORDS = [];      // registros crudos
+let GROUPED = [];      // [{answers:[{nombre,a}]}] por pregunta
+
+/* ── Gate ── */
+function checkPwd(){
+  const v = document.getElementById('pwd').value.trim();
+  if(v === ADMIN_PWD){
+    document.getElementById('gate').style.display='none';
+    document.getElementById('app').style.display='block';
+    loadCfg(); loadData();
+  } else {
+    document.getElementById('gate-err').textContent = "Contraseña incorrecta.";
+  }
+}
+
+/* ── Config IA (localStorage) ── */
+function loadCfg(){
+  document.getElementById('provider').value = localStorage.getItem('sint_provider') || 'gemini';
+  document.getElementById('apikey').value   = localStorage.getItem('sint_key') || '';
+  updHint();
+}
+function saveCfg(){
+  localStorage.setItem('sint_provider', document.getElementById('provider').value);
+  localStorage.setItem('sint_key', document.getElementById('apikey').value.trim());
+  updHint();
+}
+function updHint(){
+  const p = document.getElementById('provider').value;
+  const h = {
+    gemini:'Recomendado y gratuito. Consigue una key en <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a> (botón «Create API key»). No requiere tarjeta.',
+    anthropic:'Requiere key de <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com</a> con saldo. Modelo: claude.',
+    openai:'Requiere key de <a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com</a> con saldo.'
+  };
+  document.getElementById('key-hint').innerHTML = h[p] || '';
+}
+
+/* ── Carga de datos Supabase ── */
+async function loadData(){
+  try{
+    const url = `${SB_URL}/rest/v1/${SB_TABLE}?curso=eq.${CURSO}&select=data&order=created_at.desc`;
+    const res = await fetch(url,{headers:{apikey:SB_KEY,Authorization:"Bearer "+SB_KEY}});
+    if(!res.ok) throw new Error("HTTP "+res.status);
+    const rows = await res.json();
+    RECORDS = rows.map(r=>r.data).filter(Boolean);
+    buildGroups();
+    renderStats();
+    renderQuestions();
+    toast("✅ "+RECORDS.length+" participante(s) cargado(s)");
+  }catch(e){
+    document.getElementById('questions').innerHTML =
+      `<div class="empty"><div class="ico">⚠️</div>No se pudieron cargar los datos.<br><span style="font-size:.78rem">${e.message}</span></div>`;
+  }
+}
+
+/* Agrupa respuestas por índice de pregunta, emparejando por texto de pregunta */
+function buildGroups(){
+  GROUPED = QUESTIONS.map(()=>({answers:[]}));
+  RECORDS.forEach(rec=>{
+    const nombre = rec.nombre || "Anónimo";
+    const exps = Array.isArray(rec.expectativas) ? rec.expectativas : [];
+    QUESTIONS.forEach((qtext,qi)=>{
+      // match por texto exacto; si no, por posición
+      let e = exps.find(x=>x && x.q === qtext);
+      if(!e && exps[qi]) e = exps[qi];
+      const a = (e && typeof e.a === 'string') ? e.a.trim() : '';
+      if(a) GROUPED[qi].answers.push({nombre, a});
+    });
+  });
+}
+
+function renderStats(){
+  const total = RECORDS.length;
+  const withExp = RECORDS.filter(r=>Array.isArray(r.expectativas)&&r.expectativas.some(e=>e&&e.a&&e.a.trim())).length;
+  const totalAns = GROUPED.reduce((s,g)=>s+g.answers.length,0);
+  document.getElementById('stats').innerHTML = `
+    <div class="glass stat"><div class="stat-lbl">Participantes</div><div class="stat-val" style="color:var(--cyan)">${total}</div><div class="stat-sub">registrados</div></div>
+    <div class="glass stat"><div class="stat-lbl">Con expectativas</div><div class="stat-val" style="color:var(--green)">${withExp}</div><div class="stat-sub">respondieron abiertas</div></div>
+    <div class="glass stat"><div class="stat-lbl">Respuestas abiertas</div><div class="stat-val" style="color:var(--gold)">${totalAns}</div><div class="stat-sub">de ${total*5} posibles</div></div>
+    <div class="glass stat"><div class="stat-lbl">Preguntas</div><div class="stat-val" style="color:var(--coral)">5</div><div class="stat-sub">a sintetizar</div></div>`;
+}
+
+function esc(t){return (t==null?"":String(t)).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));}
+
+function renderQuestions(){
+  if(!RECORDS.length){
+    document.getElementById('questions').innerHTML = `<div class="empty"><div class="ico">📭</div>Aún no hay participantes con respuestas.</div>`;
+    return;
+  }
+  document.getElementById('questions').innerHTML = QUESTIONS.map((q,qi)=>{
+    const ans = GROUPED[qi].answers;
+    const rawItems = ans.map(x=>`<div class="raw-item"><div class="raw-name">${esc(x.nombre)}</div><div class="raw-ans">${esc(x.a)}</div></div>`).join('') || '<div class="raw-ans" style="color:var(--t3)">Sin respuestas todavía.</div>';
+    return `<div class="glass qblock" id="qb-${qi}">
+      <div class="qhead">
+        <div class="qnum">P${qi+1}</div>
+        <div>
+          <div class="qtitle">${esc(q)}</div>
+          <div class="qmeta">${ans.length} respuesta${ans.length!==1?'s':''}</div>
+        </div>
+        <div class="qactions">
+          <button class="btn btn-cyan" id="btn-${qi}" onclick="synthOne(${qi})" ${ans.length? '':'disabled'}>✨ Sintetizar</button>
+        </div>
+      </div>
+      <div class="synth" id="synth-${qi}"></div>
+      <span class="raw-toggle" onclick="toggleRaw(${qi})">👁️ Ver las ${ans.length} respuestas una a una ▾</span>
+      <div class="raw-list" id="raw-${qi}">${rawItems}</div>
+    </div>`;
+  }).join('');
+}
+
+function toggleRaw(qi){ document.getElementById('raw-'+qi).classList.toggle('show'); }
+
+/* ── Llamada IA multi-proveedor → texto ── */
+async function callAI(prompt){
+  const provider = document.getElementById('provider').value;
+  const key = document.getElementById('apikey').value.trim();
+  if(!key) throw new Error("Falta la API key. Pégala en Ajustes.");
+
+  if(provider==='gemini'){
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(key)}`;
+    const res = await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:0.3,maxOutputTokens:2048}})});
+    if(!res.ok) throw new Error("Gemini "+res.status+": "+(await res.text()).slice(0,180));
+    const j = await res.json();
+    return j.candidates?.[0]?.content?.parts?.[0]?.text || "";
+  }
+  if(provider==='anthropic'){
+    const res = await fetch("https://api.anthropic.com/v1/messages",{method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-3-5-haiku-latest',max_tokens:2048,messages:[{role:'user',content:prompt}]})});
+    if(!res.ok) throw new Error("Anthropic "+res.status+": "+(await res.text()).slice(0,180));
+    const j = await res.json();
+    return j.content?.[0]?.text || "";
+  }
+  // openai
+  const res = await fetch("https://api.openai.com/v1/chat/completions",{method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+    body:JSON.stringify({model:'gpt-4o-mini',temperature:0.3,messages:[{role:'user',content:prompt}]})});
+  if(!res.ok) throw new Error("OpenAI "+res.status+": "+(await res.text()).slice(0,180));
+  const j = await res.json();
+  return j.choices?.[0]?.message?.content || "";
+}
+
+function extractJSON(txt){
+  let t = txt.trim().replace(/^```(json)?/i,'').replace(/```$/,'').trim();
+  const s = t.indexOf('{'), e = t.lastIndexOf('}');
+  if(s>=0 && e>s) t = t.slice(s,e+1);
+  return JSON.parse(t);
+}
+
+async function testKey(){
+  try{ toast("Probando…"); const r = await callAI('Responde solo con la palabra: OK'); 
+    toast(r.toLowerCase().includes('ok')?"✅ Key funciona":"⚠️ Respuesta: "+r.slice(0,40)); }
+  catch(e){ toast("❌ "+e.message); }
+}
+
+/* ── Síntesis de UNA pregunta ── */
+async function synthOne(qi){
+  const ans = GROUPED[qi].answers;
+  if(!ans.length){ toast("Sin respuestas"); return; }
+  const btn = document.getElementById('btn-'+qi);
+  const box = document.getElementById('synth-'+qi);
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Analizando…';
+  box.classList.add('show'); box.innerHTML = '<div style="color:var(--t3);font-size:.85rem">Agrupando temas con IA…</div>';
+  try{
+    const lista = ans.map((x,i)=>`${i+1}. (${x.nombre}) ${x.a}`).join('\n');
+    const prompt =
+`Eres analista de datos cualitativos de un curso de formación en Inteligencia Artificial.
+A continuación tienes ${ans.length} respuestas abiertas de distintos participantes a ESTA pregunta del diagnóstico inicial:
+
+PREGUNTA: "${QUESTIONS[qi]}"
+
+RESPUESTAS:
+${lista}
+
+Analízalas SIN perder los matices. Agrúpalas en 3 a 6 temas. Devuelve ÚNICAMENTE un objeto JSON válido (sin texto extra, sin markdown) con esta forma exacta:
+{
+ "esencia": "1-2 frases que capturan la idea central de todo el grupo para esta pregunta",
+ "temas": [
+   {"titulo":"nombre corto del tema","n": <número aprox de personas que lo mencionan>,"prioridad":"alta|media|baja","resumen":"1-2 frases del tema","citas":["cita textual breve 1","cita textual breve 2"]}
+ ],
+ "prioridades": ["acción o énfasis sugerido para el docente 1","acción 2","acción 3"]
+}
+La "prioridad" refleja qué tan urgente/frecuente es para el grupo. Español. Sé fiel a lo que dijeron.`;
+    const raw = await callAI(prompt);
+    const data = extractJSON(raw);
+    box.innerHTML = renderSynth(data);
+    btn.innerHTML = '✅ Re-sintetizar';
+  }catch(e){
+    box.innerHTML = `<div style="color:var(--coral);font-size:.83rem">Error: ${esc(e.message)}</div>`;
+    btn.innerHTML = '✨ Sintetizar';
+  }
+  btn.disabled = false;
+}
+
+function renderSynth(d){
+  const temas = (d.temas||[]).map(t=>{
+    const pr = (t.prioridad||'media').toLowerCase();
+    const citas = (t.citas||[]).map(c=>`<div class="cita">“${esc(c)}”</div>`).join('');
+    return `<div class="theme">
+      <div class="theme-top">
+        <span class="theme-title">${esc(t.titulo||'Tema')}</span>
+        <span class="badge b-n">${t.n||'?'} pers.</span>
+        <span class="badge b-${pr}">${pr}</span>
+      </div>
+      <div class="theme-res">${esc(t.resumen||'')}</div>${citas}
+    </div>`;
+  }).join('');
+  const prio = (d.prioridades||[]).map(p=>`<li>${esc(p)}</li>`).join('');
+  return `
+    <div class="esencia"><div class="k">Esencia</div><p>${esc(d.esencia||'')}</p></div>
+    ${temas}
+    ${prio?`<div class="prio-box"><div class="k">🎯 Prioridades para el docente</div><ul>${prio}</ul></div>`:''}`;
+}
+
+/* ── Sintetizar TODO + resumen global ── */
+async function synthAll(){
+  const btn = document.getElementById('btn-all');
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span> Procesando…';
+  for(let qi=0; qi<QUESTIONS.length; qi++){
+    if(GROUPED[qi].answers.length) await synthOne(qi);
+  }
+  // Resumen global cruzando las 5 esencias
+  try{
+    const esencias = QUESTIONS.map((q,qi)=>{
+      const box = document.getElementById('synth-'+qi);
+      const es = box.querySelector('.esencia p');
+      return `P${qi+1} (${q}): ${es?es.textContent:'(sin datos)'}`;
+    }).join('\n');
+    const prompt =
+`Eres el analista del curso de IA. Tienes las esencias de las 5 preguntas abiertas del diagnóstico inicial del grupo:
+${esencias}
+
+Escribe un RESUMEN EJECUTIVO breve (máx 150 palabras) para el docente: perfil del grupo (metas, qué quieren aprender, dónde lo aplicarán), sus principales miedos/barreras, y las 3 prioridades pedagógicas más importantes para arrancar el curso. Tono profesional y cálido. Texto plano, sin markdown.`;
+    const gb = document.getElementById('global-box');
+    document.getElementById('global-body').textContent = 'Redactando resumen global…';
+    gb.style.display='block';
+    const r = await callAI(prompt);
+    document.getElementById('global-body').textContent = r.trim();
+    gb.scrollIntoView({behavior:'smooth',block:'start'});
+  }catch(e){ document.getElementById('global-body').textContent = 'Error resumen global: '+e.message; }
+  btn.disabled=false; btn.innerHTML='✨ Sintetizar todo';
+}
+
+/* ── Toast ── */
+let _tt;
+function toast(m){
+  let el=document.getElementById('_toast');
+  if(!el){el=document.createElement('div');el.id='_toast';el.className='toast';document.body.appendChild(el);}
+  el.textContent=m; el.classList.add('show');
+  clearTimeout(_tt); _tt=setTimeout(()=>el.classList.remove('show'),2600);
+}
+</script>
+</body>
+</html>
